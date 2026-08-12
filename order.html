@@ -3,28 +3,33 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="酒谱纯点单界面：选择鸡尾酒、数量和备注，生成可复制的点单纸。">
+    <meta name="description" content="酒谱纯点单界面：选择鸡尾酒、数量和备注，生成可复制的点单纸。" data-i18n-content="order.metaDescription">
     <meta name="theme-color" content="#190d12">
-    <title>点单 · 酒谱 Cocktail Atlas</title>
+    <title data-i18n="order.metaTitle">点单 · 酒谱 Cocktail Atlas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="order.css">
+    <script src="locale.js" defer></script>
     <script src="order.js" defer></script>
   </head>
   <body class="order-page">
-    <a class="skip-link" href="#menu">跳到点单酒单</a>
+    <a class="skip-link" href="#menu" data-i18n="order.skip">跳到点单酒单</a>
 
     <header class="site-header">
-      <a class="brand" href="index.html" aria-label="返回酒谱首页">
+      <a class="brand" href="index.html" aria-label="返回酒谱首页" data-i18n-aria-label="common.backHome">
         <span class="brand-mark" aria-hidden="true">J</span>
         <span><b>酒谱</b><small>Cocktail Atlas</small></span>
       </a>
-      <nav aria-label="页面导航">
-        <a href="index.html#catalog">配方</a>
-        <a href="order.html" aria-current="page">点单</a>
-        <button class="theme-toggle" type="button" aria-label="切换明暗主题" aria-pressed="true">
+      <nav aria-label="页面导航" data-i18n-aria-label="common.nav">
+        <a href="index.html#catalog" data-i18n="common.recipes">配方</a>
+        <a href="order.html" aria-current="page" data-i18n="common.order">点单</a>
+        <div class="language-switch" role="group" aria-label="语言选择" data-i18n-aria-label="common.language">
+          <button type="button" data-lang="zh" aria-pressed="true">中</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <button class="theme-toggle" type="button" aria-label="切换明暗主题" aria-pressed="true" data-i18n-aria-label="common.theme">
           <span aria-hidden="true">◐</span><span class="theme-label">夜色</span>
         </button>
       </nav>
@@ -34,9 +39,9 @@
       <section class="order-hero" aria-labelledby="order-title">
         <div>
           <p class="eyebrow"><span>Open Bar Order</span><span>ORDER / 001</span></p>
-          <h1 id="order-title">今晚，<br>想喝哪一杯？</h1>
-          <p class="hero-intro">从完整酒谱中选酒、调整杯数，再留一条给调酒师的备注。只记下你真正想喝的。</p>
-          <a class="primary-action" href="#menu">翻开酒单 <span aria-hidden="true">↘</span></a>
+          <h1 id="order-title" data-i18n-html="order.heroTitle">今晚，<br>想喝哪一杯？</h1>
+          <p class="hero-intro" data-i18n="order.heroIntro">从完整酒谱中选酒、调整杯数，再留一条给调酒师的备注。只记下你真正想喝的。</p>
+          <a class="primary-action" href="#menu" data-i18n-html="order.heroAction">翻开酒单 <span aria-hidden="true">↘</span></a>
         </div>
         <div class="order-hero-mark" aria-hidden="true">
           <div class="ticket-number"><span>NOW MIXING</span><b data-order-total>0</b><small>GLASSES</small></div>
@@ -50,39 +55,39 @@
           <header class="order-section-heading">
             <div>
               <p class="eyebrow">Choose Your Drink</p>
-              <h2 id="menu-title">选酒</h2>
+              <h2 id="menu-title" data-i18n="order.menuTitle">选酒</h2>
             </div>
-            <p>搜索酒名或原料，也可以按基酒和经典标记浏览。每次点击“加入”增加一杯。</p>
+            <p data-i18n="order.menuIntro">搜索酒名或原料，也可以按基酒和经典标记浏览。每次点击“加入”增加一杯。</p>
           </header>
 
           <div class="order-search-panel">
-            <label for="order-search">搜索酒名 / 原料</label>
+            <label for="order-search" data-i18n="order.searchLabel">搜索酒名 / 原料</label>
             <span>
-              <input id="order-search" type="search" autocomplete="off" placeholder="例如：Negroni、Rum、咖啡" spellcheck="false">
-              <button class="order-clear-search" type="button" aria-label="清除搜索" hidden>×</button>
+              <input id="order-search" type="search" autocomplete="off" placeholder="例如：Negroni、Rum、咖啡" data-i18n-placeholder="order.searchPlaceholder" spellcheck="false">
+              <button class="order-clear-search" type="button" aria-label="清除搜索" data-i18n-aria-label="order.clearSearch" hidden>×</button>
             </span>
           </div>
 
-          <div class="order-filters" role="group" aria-label="酒单筛选">
-            <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">全部</button>
-            <button type="button" class="filter-chip" data-filter="iba" aria-pressed="false">IBA 经典</button>
-            <button type="button" class="filter-chip" data-filter="non-alcoholic" aria-pressed="false">无酒精</button>
-            <button type="button" class="filter-chip" data-filter="gin" aria-pressed="false">金酒</button>
-            <button type="button" class="filter-chip" data-filter="vodka" aria-pressed="false">伏特加</button>
-            <button type="button" class="filter-chip" data-filter="rum" aria-pressed="false">朗姆</button>
-            <button type="button" class="filter-chip" data-filter="whiskey" aria-pressed="false">威士忌</button>
-            <button type="button" class="filter-chip" data-filter="tequila" aria-pressed="false">龙舌兰</button>
+          <div class="order-filters" role="group" aria-label="酒单筛选" data-i18n-aria-label="order.filtersLabel">
+            <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true" data-i18n="common.all">全部</button>
+            <button type="button" class="filter-chip" data-filter="iba" aria-pressed="false" data-i18n="common.iba">IBA 经典</button>
+            <button type="button" class="filter-chip" data-filter="non-alcoholic" aria-pressed="false" data-i18n="common.nonAlcoholic">无酒精</button>
+            <button type="button" class="filter-chip" data-filter="gin" aria-pressed="false" data-i18n="common.gin">金酒</button>
+            <button type="button" class="filter-chip" data-filter="vodka" aria-pressed="false" data-i18n="common.vodka">伏特加</button>
+            <button type="button" class="filter-chip" data-filter="rum" aria-pressed="false" data-i18n="common.rum">朗姆</button>
+            <button type="button" class="filter-chip" data-filter="whiskey" aria-pressed="false" data-i18n="common.whiskey">威士忌</button>
+            <button type="button" class="filter-chip" data-filter="tequila" aria-pressed="false" data-i18n="common.tequila">龙舌兰</button>
           </div>
 
-          <p class="order-results-status" id="order-results-status" aria-live="polite">正在展开酒单…</p>
+          <p class="order-results-status" id="order-results-status" aria-live="polite" data-i18n="order.loading">正在展开酒单…</p>
           <div class="order-loading" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
           <div class="order-menu-list" id="order-menu-list"></div>
           <div class="order-empty-results" id="order-empty-results" hidden>
             <b aria-hidden="true">∅</b>
-            <p>没有找到这杯，试试其他酒名或原料。</p>
-            <button type="button" id="reset-order-search">清除筛选</button>
+            <p data-i18n="order.empty">没有找到这杯，试试其他酒名或原料。</p>
+            <button type="button" id="reset-order-search" data-i18n="order.clearFilters">清除筛选</button>
           </div>
-          <button class="order-load-more" id="order-load-more" type="button" hidden>再展开 <span></span> 款</button>
+          <button class="order-load-more" id="order-load-more" type="button" hidden><span data-i18n="order.more">再展开</span> <b></b></button>
         </div>
 
         <aside class="order-ticket" id="order" aria-labelledby="ticket-title">
@@ -91,40 +96,40 @@
             <span aria-hidden="true">✣</span>
           </header>
           <div class="ticket-title-row">
-            <h2 id="ticket-title">点单纸</h2>
-            <p><b data-order-total>0</b> 杯</p>
+            <h2 id="ticket-title" data-i18n="order.ticketTitle">点单纸</h2>
+            <p><b data-order-total>0</b> <span data-order-unit>杯</span></p>
           </div>
 
           <form id="order-form" novalidate>
-            <div class="order-error" id="order-error" role="alert" tabindex="-1" hidden>请先从左侧酒单加入至少一杯。</div>
+            <div class="order-error" id="order-error" role="alert" tabindex="-1" hidden data-i18n="order.error">请先从左侧酒单加入至少一杯。</div>
             <div class="selected-drinks" id="selected-drinks"></div>
             <div class="empty-ticket" id="empty-ticket">
               <span aria-hidden="true">＋</span>
-              <p>点单纸还是空的</p>
-              <small>从酒单加入一杯，它会出现在这里。</small>
+              <p data-i18n="order.emptyTitle">点单纸还是空的</p>
+              <small data-i18n="order.emptyCopy">从酒单加入一杯，它会出现在这里。</small>
             </div>
 
             <div class="note-field">
-              <label for="order-note">给调酒师的备注 <span>可选</span></label>
-              <p id="order-note-help">例如：少甜、不加装饰、其中一杯无酒精。</p>
+              <label for="order-note"><span data-i18n="order.noteLabel">给调酒师的备注</span> <small data-i18n="order.optional">可选</small></label>
+              <p id="order-note-help" data-i18n="order.noteHelp">例如：少甜、不加装饰、其中一杯无酒精。</p>
               <textarea id="order-note" rows="4" maxlength="160" aria-describedby="order-note-help order-note-count"></textarea>
               <span id="order-note-count">还可输入 160 字</span>
             </div>
 
-            <button class="confirm-order" type="submit" disabled>确认点单 <span aria-hidden="true">→</span></button>
-            <button class="clear-order" type="button" disabled>清空点单纸</button>
+            <button class="confirm-order" type="submit" disabled data-i18n-html="order.confirm">确认点单 <span aria-hidden="true">→</span></button>
+            <button class="clear-order" type="button" disabled data-i18n="order.clear">清空点单纸</button>
           </form>
-          <p class="local-note">点单在此页面生成；确认后可复制单据交给调酒师。</p>
+          <p class="local-note" data-i18n="order.localNote">点单在此页面生成；确认后可复制单据交给调酒师。</p>
         </aside>
       </section>
     </main>
 
-    <button class="mobile-order-bar" type="button" aria-label="查看点单纸">
-      <span>查看点单</span><b><span data-order-total>0</span> 杯</b>
+    <button class="mobile-order-bar" type="button" aria-label="查看点单纸" data-i18n-aria-label="order.mobileLabel">
+      <span data-i18n="order.mobileView">查看点单</span><b><span data-order-total>0</span> <i data-order-unit>杯</i></b>
     </button>
 
     <dialog class="confirmation-dialog" id="confirmation-dialog" aria-labelledby="confirmation-title">
-      <button class="confirmation-close" type="button" aria-label="关闭确认单">×</button>
+      <button class="confirmation-close" type="button" aria-label="关闭确认单" data-i18n-aria-label="order.closeConfirmation">×</button>
       <div id="confirmation-content"></div>
     </dialog>
 

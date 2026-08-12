@@ -125,6 +125,7 @@
 .order-menu-copy > span { display: block; margin-block-end: 9px; color: var(--ink-soft); font: .6rem/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
 .order-menu-copy h3 { font-size: clamp(1.7rem, 7vw, 2.45rem); line-height: .96; overflow-wrap: anywhere; }
 .order-menu-copy h3 i { color: var(--cherry); font-weight: 400; }
+.order-menu-copy h3 .original-name { margin-block-start: 6px; font-size: .58rem; }
 .order-menu-copy p { max-width: 60ch; margin: 11px 0 0; color: var(--ink-soft); font-size: .76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .add-drink {
   min-width: 74px;
@@ -176,6 +177,7 @@
 
 .selected-drink { padding-block: 18px; display: grid; grid-template-columns: 1fr auto; gap: 16px; border-block-end: 1px solid var(--rule); }
 .selected-drink h3 { font-size: 1.55rem; line-height: 1; overflow-wrap: anywhere; }
+.selected-drink h3 .original-name { margin-block-start: 6px; color: var(--paper-deep); font-size: .56rem; }
 .selected-drink p { margin: 7px 0 0; color: var(--paper-deep); font-size: .7rem; }
 .quantity-controls { display: grid; grid-template-columns: 44px 34px 44px; align-items: center; }
 .quantity-controls button { width: 44px; height: 44px; border: 1px solid var(--rule); background: transparent; color: var(--cream); cursor: pointer; font-size: 1.15rem; }
@@ -189,7 +191,7 @@
 .empty-ticket small { color: var(--paper-deep); }
 .note-field { padding-block: 24px; }
 .note-field label { display: flex; justify-content: space-between; gap: 16px; font-weight: 700; }
-.note-field label span { color: var(--paper-deep); font-size: .72rem; font-weight: 400; }
+.note-field label small { color: var(--paper-deep); font-size: .72rem; font-weight: 400; }
 .note-field p { margin: 5px 0 12px; color: var(--paper-deep); font-size: .72rem; }
 .note-field textarea {
   width: 100%;
@@ -228,6 +230,7 @@
   font-weight: 700;
 }
 .mobile-order-bar b { color: var(--copper); }
+.mobile-order-bar i { font-style: normal; }
 
 .confirmation-dialog {
   width: min(100% - 16px, 680px);
@@ -263,6 +266,7 @@
 .confirmation-list { margin: 0; padding: 0; list-style: none; border-block-start: 1px solid #a99889; }
 .confirmation-list li { min-height: 52px; padding-block: 12px; display: flex; justify-content: space-between; gap: 20px; border-block-end: 1px solid #cbbdab; }
 .confirmation-list b { font: 1.4rem/1 var(--display); }
+.confirmation-list .original-name { margin-block-start: 4px; color: #6f6465; font-size: .56rem; }
 .confirmation-note { margin-block: 24px; padding-inline-start: 14px; border-inline-start: 3px solid #8b1831; }
 .confirmation-note small { display: block; margin-block-end: 4px; color: #6f6465; }
 .confirmation-actions { display: grid; gap: 9px; }

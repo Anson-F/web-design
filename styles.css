@@ -122,6 +122,19 @@ button { color: inherit; }
 .site-header nav a:hover,
 .theme-toggle:hover { color: var(--cream); }
 .theme-toggle { display: inline-flex; align-items: center; gap: 7px; }
+.language-switch { display: inline-flex; border: 1px solid var(--rule); }
+.language-switch button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--paper-deep);
+  cursor: pointer;
+  font: .68rem/1 var(--mono);
+}
+.language-switch button + button { border-inline-start: 1px solid var(--rule); }
+.language-switch button.is-active { background: var(--copper); color: #190d12; }
 
 .hero {
   width: var(--rail);
@@ -373,6 +386,14 @@ h2 { font-size: clamp(3.2rem, 14vw, 6.7rem); line-height: .88; letter-spacing: -
 .recipe-topline { display: flex; justify-content: space-between; gap: 16px; color: var(--ink-soft); font: .62rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
 .recipe-card h3 { margin: auto 0 20px; font-size: clamp(2rem, 8vw, 3.1rem); line-height: .95; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .recipe-card h3 i { color: var(--cherry); font-weight: 400; }
+.localized-name { display: block; }
+.original-name {
+  display: block;
+  margin-block-start: 8px;
+  color: var(--ink-soft);
+  font: .62rem/1.35 var(--mono);
+  letter-spacing: .07em;
+}
 .recipe-meta { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
 .recipe-meta p { max-width: 78%; margin: 0; color: var(--ink-soft); font-size: .82rem; }
 .recipe-arrow { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--ink); border-radius: 50%; transition: transform .3s var(--ease), background .3s; }
@@ -469,6 +490,7 @@ footer a { min-height: 44px; display: flex; align-items: center; justify-self: s
 .dialog-inner { clear: both; padding: 0 22px 36px; }
 .dialog-kicker { margin: 0 0 12px; color: #8b1831; font: .64rem/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
 .dialog-title { max-width: 780px; font-size: clamp(3.2rem, 15vw, 7rem); line-height: .84; letter-spacing: -.05em; }
+.dialog-title .original-name { margin-block-start: 14px; color: #6f6465; font-size: .7rem; letter-spacing: .1em; }
 .dialog-tags { margin-block: 24px 36px; display: flex; flex-wrap: wrap; gap: 8px; }
 .dialog-tags span { padding: 7px 10px; border: 1px solid #a99889; border-radius: 99px; font-size: .73rem; }
 .dialog-grid { display: grid; gap: 34px; padding-block-start: 28px; border-block-start: 1px solid #a99889; }
@@ -530,6 +552,14 @@ footer a { min-height: 44px; display: flex; align-items: center; justify-self: s
   footer a { justify-self: end; }
   .dialog-inner { padding: 0 54px 54px; }
   .dialog-grid { grid-template-columns: .9fr 1.1fr; gap: 60px; }
+}
+
+@media (max-width: 560px) {
+  .site-header nav a,
+  .theme-toggle { padding-inline: 7px; }
+  .site-header nav { gap: 0; }
+  .theme-label { display: none; }
+  .language-switch button { min-width: 34px; padding-inline: 5px; }
 }
 
 @media (min-width: 1100px) {
