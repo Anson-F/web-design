@@ -2,6 +2,8 @@ const DATA_URL = "data/recipes.json";
 const ORDER_KEY = "cocktail-atlas-order-v1";
 const ORDER_NOTE_KEY = "cocktail-atlas-order-note-v1";
 const PAGE_SIZE = 32;
+const L = window.CocktailLocale;
+const pick = (zh, en) => (L.current === "zh" ? zh : en);
 
 const state = {
   recipes: [],
@@ -34,19 +36,33 @@ const els = {
 };
 
 const baseLabels = {
-  gin: "金酒", vodka: "伏特加", rum: "朗姆", whiskey: "威士忌",
-  tequila: "龙舌兰", brandy: "白兰地", wine: "葡萄酒", beer: "啤酒",
-  liqueur: "利口酒", "non-alcoholic": "无酒精", other: "其他",
+  gin: ["金酒", "Gin"], vodka: ["伏特加", "Vodka"], rum: ["朗姆", "Rum"], whiskey: ["威士忌", "Whiskey"],
+  tequila: ["龙舌兰", "Tequila"], brandy: ["白兰地", "Brandy"], wine: ["葡萄酒", "Wine"], beer: ["啤酒", "Beer"],
+  liqueur: ["利口酒", "Liqueur"], "non-alcoholic": ["无酒精", "Non-alcoholic"], other: ["其他", "Other"],
 };
 
 const methodLabels = {
-  shake: "摇和", stir: "搅拌", build: "直调", blend: "搅打",
-  layer: "分层", muddle: "捣压", other: "其他",
+  shake: ["摇和", "Shake"], stir: ["搅拌", "Stir"], build: ["直调", "Build"], blend: ["搅打", "Blend"],
+  layer: ["分层", "Layer"], muddle: ["捣压", "Muddle"], other: ["其他", "Other"],
 };
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
 }[char]));
+
+function localLabel(dictionary, key) {
+  const value = dictionary[key] || [key, key];
+  return value[L.current === "zh" ? 0 : 1];
+}
+
+function nameHtml(recipe) {
+  if (L.current === "en") return `<span class="localized-name" lang="en">${escapeHtml(recipe.name)}</span>`;
+  return `<span class="localized-name" lang="zh-CN">${escapeHtml(recipe.nameZh || recipe.name)}</span><small class="original-name" lang="en">${escapeHtml(recipe.name)}</small>`;
+}
+
+function displayName(recipe) {
+  return L.current === "zh" ? (recipe.nameZh || recipe.name) : recipe.name;
+}
 
 function normalizeSearch(value) {
   return value.toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -86,7 +102,7 @@ function filterRecipes() {
     if (state.filter === "non-alcoholic" && recipe.alcoholic !== "Non alcoholic") return false;
     if (!["all", "iba", "non-alcoholic"].includes(state.filter) && recipe.base !== state.filter) return false;
     return words.every((word) => recipe.search.includes(word));
-  }).sort((a, b) => a.name.localeCompare(b.name));
+  }).sort((a, b) => displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
 }
 
 function menuItem(recipe) {
@@ -96,12 +112,12 @@ function menuItem(recipe) {
     <article class="order-menu-item">
       <div class="order-menu-item-inner">
         <div class="order-menu-copy">
-          <span>${escapeHtml(baseLabels[recipe.base] || recipe.base)} · ${escapeHtml(methodLabels[recipe.method] || recipe.method)} · ${escapeHtml(flag)}</span>
-          <h3>${escapeHtml(recipe.name)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
+          <span>${escapeHtml(localLabel(baseLabels, recipe.base))} · ${escapeHtml(localLabel(methodLabels, recipe.method))} · ${escapeHtml(flag)}</span>
+          <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
           <p>${escapeHtml(ingredientSummary(recipe))}</p>
         </div>
-        <button class="add-drink${quantity ? " has-quantity" : ""}" type="button" data-add-id="${recipe.id}" aria-label="加入一杯 ${escapeHtml(recipe.name)}">
-          ${quantity ? `再加一杯<span>已选 ${quantity}</span>` : "加入"}
+        <button class="add-drink${quantity ? " has-quantity" : ""}" type="button" data-add-id="${recipe.id}" aria-label="${escapeHtml(pick(`加入一杯 ${displayName(recipe)}`, `Add one ${recipe.name}`))}">
+          ${quantity ? `${pick("再加一杯", "Add another")}<span>${pick(`已选 ${quantity}`, `${quantity} selected`)}</span>` : pick("加入", "Add")}
         </button>
       </div>
     </article>`;
@@ -111,26 +127,28 @@ function renderMenu() {
   filterRecipes();
   const shown = state.visible.slice(0, state.limit);
   els.menu.innerHTML = shown.map(menuItem).join("");
-  els.resultsStatus.textContent = `酒单共 ${state.visible.length} 款${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`;
+  els.resultsStatus.textContent = L.current === "zh"
+    ? `酒单共 ${state.visible.length} 款${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`
+    : `${state.visible.length} drinks${shown.length < state.visible.length ? ` · showing ${shown.length}` : ""}`;
   els.emptyResults.hidden = state.visible.length !== 0;
   const remaining = state.visible.length - shown.length;
   els.loadMore.hidden = remaining <= 0;
-  els.loadMore.querySelector("span").textContent = Math.min(PAGE_SIZE, remaining);
+  els.loadMore.querySelector("b").textContent = `${Math.min(PAGE_SIZE, remaining)} ${pick("款", "")}`.trim();
 }
 
 function selectedItem(recipe, quantity) {
   return `
     <article class="selected-drink">
       <div>
-        <h3>${escapeHtml(recipe.name)}</h3>
-        <p>${escapeHtml(baseLabels[recipe.base] || recipe.base)} · ${escapeHtml(methodLabels[recipe.method] || recipe.method)}</p>
+        <h3>${nameHtml(recipe)}</h3>
+        <p>${escapeHtml(localLabel(baseLabels, recipe.base))} · ${escapeHtml(localLabel(methodLabels, recipe.method))}</p>
       </div>
-      <div class="quantity-controls" aria-label="${escapeHtml(recipe.name)} 数量">
-        <button type="button" data-decrease-id="${recipe.id}" aria-label="减少一杯 ${escapeHtml(recipe.name)}">−</button>
-        <output aria-label="当前 ${quantity} 杯">${quantity}</output>
-        <button type="button" data-increase-id="${recipe.id}" aria-label="增加一杯 ${escapeHtml(recipe.name)}">＋</button>
+      <div class="quantity-controls" aria-label="${escapeHtml(pick(`${displayName(recipe)} 数量`, `${recipe.name} quantity`))}">
+        <button type="button" data-decrease-id="${recipe.id}" aria-label="${escapeHtml(pick(`减少一杯 ${displayName(recipe)}`, `Remove one ${recipe.name}`))}">−</button>
+        <output aria-label="${escapeHtml(pick(`当前 ${quantity} 杯`, `Current quantity: ${quantity}`))}">${quantity}</output>
+        <button type="button" data-increase-id="${recipe.id}" aria-label="${escapeHtml(pick(`增加一杯 ${displayName(recipe)}`, `Add one ${recipe.name}`))}">＋</button>
       </div>
-      <button class="remove-drink" type="button" data-remove-id="${recipe.id}">从点单纸移除</button>
+      <button class="remove-drink" type="button" data-remove-id="${recipe.id}">${pick("从点单纸移除", "Remove from order")}</button>
     </article>`;
 }
 
@@ -142,6 +160,7 @@ function renderTicket() {
 
   const total = totalGlasses();
   document.querySelectorAll("[data-order-total]").forEach((node) => { node.textContent = total; });
+  document.querySelectorAll("[data-order-unit]").forEach((node) => { node.textContent = L.current === "zh" ? "杯" : (total === 1 ? "glass" : "glasses"); });
   els.emptyTicket.hidden = total > 0;
   els.confirm.disabled = total === 0;
   els.clearOrder.disabled = total === 0;
@@ -154,7 +173,7 @@ function addDrink(id) {
   state.cart.set(id, Math.min(20, (state.cart.get(id) || 0) + 1));
   renderTicket();
   const recipe = state.recipes.find((item) => item.id === id);
-  showToast(`${recipe?.name || "这杯"} 已加入点单`);
+  showToast(pick(`${recipe ? displayName(recipe) : "这杯"} 已加入点单`, `${recipe?.name || "Drink"} added to order`));
 }
 
 function changeQuantity(id, delta) {
@@ -174,7 +193,7 @@ function clearOrder() {
 
 function updateNoteCount() {
   const remaining = 160 - els.note.value.length;
-  els.noteCount.textContent = `还可输入 ${remaining} 字`;
+  els.noteCount.textContent = pick(`还可输入 ${remaining} 字`, `${remaining} characters remaining`);
 }
 
 function orderCode() {
@@ -186,9 +205,12 @@ function orderCode() {
 function orderText(code) {
   const lines = [...state.cart.entries()].map(([id, quantity]) => {
     const recipe = state.recipes.find((item) => item.id === id);
-    return `${quantity} 杯 · ${recipe?.name || id}`;
+    const title = recipe ? (L.current === "zh" ? `${recipe.nameZh || recipe.name} / ${recipe.name}` : recipe.name) : id;
+    return pick(`${quantity} 杯 · ${title}`, `${quantity} × ${title}`);
   });
-  return `酒谱点单 ${code}\n${lines.join("\n")}\n共 ${totalGlasses()} 杯${els.note.value.trim() ? `\n备注：${els.note.value.trim()}` : ""}`;
+  return L.current === "zh"
+    ? `酒谱点单 ${code}\n${lines.join("\n")}\n共 ${totalGlasses()} 杯${els.note.value.trim() ? `\n备注：${els.note.value.trim()}` : ""}`
+    : `Cocktail Atlas order ${code}\n${lines.join("\n")}\n${totalGlasses()} glasses total${els.note.value.trim() ? `\nNote: ${els.note.value.trim()}` : ""}`;
 }
 
 function openConfirmation() {
@@ -200,21 +222,21 @@ function openConfirmation() {
   const code = orderCode();
   const rows = [...state.cart.entries()].map(([id, quantity]) => {
     const recipe = state.recipes.find((item) => item.id === id);
-    return `<li><span>${escapeHtml(recipe?.name || id)}</span><b>× ${quantity}</b></li>`;
+    return `<li><span>${recipe ? nameHtml(recipe) : escapeHtml(id)}</span><b>× ${quantity}</b></li>`;
   }).join("");
   const note = els.note.value.trim();
 
   els.dialogContent.innerHTML = `
     <article class="confirmation-sheet">
-      <p class="confirmation-kicker">Order Confirmed · ${totalGlasses()} Glasses</p>
-      <h2 id="confirmation-title">这单，<br>记好了。</h2>
+      <p class="confirmation-kicker">${pick("点单已确认", "Order confirmed")} · ${totalGlasses()} ${pick("杯", "glasses")}</p>
+      <h2 id="confirmation-title">${pick("这单，<br>记好了。", "Your order<br>is noted.")}</h2>
       <p class="confirmation-code">${code}</p>
       <ul class="confirmation-list">${rows}</ul>
-      ${note ? `<p class="confirmation-note"><small>备注</small>${escapeHtml(note)}</p>` : ""}
+      ${note ? `<p class="confirmation-note"><small>${pick("备注", "Note")}</small>${escapeHtml(note)}</p>` : ""}
       <div class="confirmation-actions">
-        <button class="copy-order" type="button" data-copy-code="${code}">复制点单纸</button>
-        <button type="button" data-return-order>返回修改</button>
-        <button type="button" data-finish-order>完成并清空</button>
+        <button class="copy-order" type="button" data-copy-code="${code}">${pick("复制点单纸", "Copy order slip")}</button>
+        <button type="button" data-return-order>${pick("返回修改", "Return to edit")}</button>
+        <button type="button" data-finish-order>${pick("完成并清空", "Finish and clear")}</button>
       </div>
     </article>`;
   els.dialog.showModal();
@@ -298,11 +320,11 @@ function bindEvents() {
   els.dialog.addEventListener("click", (event) => {
     if (event.target === els.dialog || event.target.closest("[data-return-order]")) els.dialog.close();
     const copy = event.target.closest("[data-copy-code]");
-    if (copy) navigator.clipboard.writeText(orderText(copy.dataset.copyCode)).then(() => showToast("点单纸已复制"));
+    if (copy) navigator.clipboard.writeText(orderText(copy.dataset.copyCode)).then(() => showToast(pick("点单纸已复制", "Order slip copied")));
     if (event.target.closest("[data-finish-order]")) {
       els.dialog.close();
       clearOrder();
-      showToast("点单纸已清空");
+      showToast(pick("点单纸已清空", "Order slip cleared"));
     }
   });
   const themeButton = document.querySelector(".theme-toggle");
@@ -310,7 +332,7 @@ function bindEvents() {
     const isDark = document.documentElement.dataset.theme === "dark";
     document.documentElement.dataset.theme = isDark ? "light" : "dark";
     themeButton.setAttribute("aria-pressed", String(!isDark));
-    themeButton.querySelector(".theme-label").textContent = isDark ? "纸色" : "夜色";
+    themeButton.querySelector(".theme-label").textContent = isDark ? L.t("common.themeLight") : L.t("common.themeDark");
     localStorage.setItem("cocktail-atlas-theme", isDark ? "light" : "dark");
   });
 }
@@ -322,7 +344,7 @@ async function loadData() {
     const payload = await response.json();
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
-      search: normalizeSearch([recipe.name, recipe.category, recipe.iba || "", ...recipe.ingredients.map((item) => item.name)].join(" ")),
+      search: normalizeSearch([recipe.name, recipe.nameZh || "", recipe.category, recipe.iba || "", ...recipe.ingredients.map((item) => item.name)].join(" ")),
     }));
     els.loading.hidden = true;
     loadSavedOrder();
@@ -331,13 +353,13 @@ async function loadData() {
     if (addId && state.recipes.some((recipe) => recipe.id === addId)) {
       state.cart.set(addId, Math.min(20, (state.cart.get(addId) || 0) + 1));
       history.replaceState({}, "", "order.html");
-      showToast("已从配方页加入点单");
+      showToast(pick("已从配方页加入点单", "Added from recipe page"));
     }
     renderTicket();
   } catch (error) {
     console.error("Unable to load order menu", error);
     els.loading.hidden = true;
-    els.resultsStatus.textContent = "酒单暂时无法读取，请稍后刷新。";
+    els.resultsStatus.textContent = pick("酒单暂时无法读取，请稍后刷新。", "The drinks menu is temporarily unavailable. Please refresh later.");
   }
 }
 
@@ -346,8 +368,18 @@ if (savedTheme) {
   document.documentElement.dataset.theme = savedTheme;
   const dark = savedTheme === "dark";
   document.querySelector(".theme-toggle").setAttribute("aria-pressed", String(dark));
-  document.querySelector(".theme-label").textContent = dark ? "夜色" : "纸色";
+  document.querySelector(".theme-label").textContent = dark ? L.t("common.themeDark") : L.t("common.themeLight");
 }
+document.querySelector(".theme-label").textContent = document.documentElement.dataset.theme === "dark"
+  ? L.t("common.themeDark")
+  : L.t("common.themeLight");
 
 bindEvents();
 loadData();
+
+window.addEventListener("cocktail-locale-change", () => {
+  const dark = document.documentElement.dataset.theme === "dark";
+  document.querySelector(".theme-label").textContent = dark ? L.t("common.themeDark") : L.t("common.themeLight");
+  updateNoteCount();
+  if (state.recipes.length) renderTicket();
+});

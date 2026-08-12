@@ -1,5 +1,7 @@
 const DATA_URL = "data/recipes.json";
 const PAGE_SIZE = 30;
+const L = window.CocktailLocale;
+const pick = (zh, en) => (L.current === "zh" ? zh : en);
 
 const state = {
   recipes: [],
@@ -10,6 +12,7 @@ const state = {
   query: "",
   limit: PAGE_SIZE,
   meta: null,
+  activeRecipeId: null,
 };
 
 const els = {
@@ -29,21 +32,43 @@ const els = {
 
 const labels = {
   bases: {
-    gin: "金酒", vodka: "伏特加", rum: "朗姆", whiskey: "威士忌",
-    tequila: "龙舌兰", brandy: "白兰地", wine: "葡萄酒", beer: "啤酒",
-    liqueur: "利口酒", "non-alcoholic": "无酒精", other: "其他",
+    gin: ["金酒", "Gin"], vodka: ["伏特加", "Vodka"], rum: ["朗姆", "Rum"], whiskey: ["威士忌", "Whiskey"],
+    tequila: ["龙舌兰", "Tequila"], brandy: ["白兰地", "Brandy"], wine: ["葡萄酒", "Wine"], beer: ["啤酒", "Beer"],
+    liqueur: ["利口酒", "Liqueur"], "non-alcoholic": ["无酒精", "Non-alcoholic"], other: ["其他", "Other"],
   },
   methods: {
-    shake: "摇和", stir: "搅拌", build: "直调", blend: "搅打",
-    layer: "分层", muddle: "捣压", other: "其他",
+    shake: ["摇和", "Shake"], stir: ["搅拌", "Stir"], build: ["直调", "Build"], blend: ["搅打", "Blend"],
+    layer: ["分层", "Layer"], muddle: ["捣压", "Muddle"], other: ["其他", "Other"],
   },
   glasses: {
-    "Cocktail glass": "鸡尾酒杯", "Highball glass": "高球杯", "Collins Glass": "柯林杯",
+    "Cocktail glass": "鸡尾酒杯", "Highball glass": "高球杯", "Collins Glass": "柯林杯", "Collins glass": "柯林杯",
     "Old-fashioned glass": "古典杯", "Shot glass": "烈酒杯", "Champagne flute": "香槟笛形杯",
     "Whiskey sour glass": "酸酒杯", "Margarita/Coupette glass": "玛格丽特杯",
     "Coffee mug": "咖啡杯", "Beer mug": "啤酒杯", "Wine Glass": "葡萄酒杯",
   },
+  categories: {
+    "Cocktail": "鸡尾酒", "Ordinary Drink": "普通饮品", "Shot": "烈饮", "Coffee / Tea": "咖啡 / 茶",
+    "Punch / Party Drink": "宾治 / 派对饮品", "Homemade Liqueur": "自制利口酒", "Soft Drink": "无酒精饮品",
+    "Cocoa": "可可", "Other / Unknown": "其他",
+  },
 };
+
+function localLabel(group, key) {
+  const value = labels[group][key];
+  if (Array.isArray(value)) return value[L.current === "zh" ? 0 : 1];
+  if (group === "glasses") return L.current === "zh" ? (value || key) : key;
+  if (group === "categories") return L.current === "zh" ? (value || key) : key;
+  return key;
+}
+
+function nameHtml(recipe) {
+  if (L.current === "en") return `<span class="localized-name" lang="en">${escapeHtml(recipe.name)}</span>`;
+  return `<span class="localized-name" lang="zh-CN">${escapeHtml(recipe.nameZh || recipe.name)}</span><small class="original-name" lang="en">${escapeHtml(recipe.name)}</small>`;
+}
+
+function displayName(recipe) {
+  return L.current === "zh" ? (recipe.nameZh || recipe.name) : recipe.name;
+}
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
@@ -54,8 +79,8 @@ function normalizeSearch(value) {
 }
 
 function formatDate(value) {
-  if (!value) return "未知";
-  return new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+  if (!value) return pick("未知", "Unknown");
+  return new Intl.DateTimeFormat(L.current === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "short", day: "2-digit" }).format(new Date(value));
 }
 
 function ingredientSummary(recipe) {
@@ -64,12 +89,12 @@ function ingredientSummary(recipe) {
 }
 
 function renderCard(recipe, index) {
-  const iba = recipe.iba ? `<span class="iba-mark">IBA · ${escapeHtml(recipe.iba)}</span>` : `<span>${escapeHtml(recipe.category)}</span>`;
+  const iba = recipe.iba ? `<span class="iba-mark">IBA · ${escapeHtml(recipe.iba)}</span>` : `<span>${escapeHtml(localLabel("categories", recipe.category))}</span>`;
   return `
     <article class="recipe-card">
-      <button class="recipe-open" type="button" data-id="${recipe.id}" aria-label="查看 ${escapeHtml(recipe.name)} 配方">
-        <span class="recipe-topline"><span>${String(index + 1).padStart(3, "0")} · ${escapeHtml(labels.bases[recipe.base] || recipe.base)}</span>${iba}</span>
-        <h3>${escapeHtml(recipe.name)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
+      <button class="recipe-open" type="button" data-id="${recipe.id}" aria-label="${escapeHtml(pick(`查看 ${displayName(recipe)} 配方`, `View ${recipe.name} recipe`))}">
+        <span class="recipe-topline"><span>${String(index + 1).padStart(3, "0")} · ${escapeHtml(localLabel("bases", recipe.base))}</span>${iba}</span>
+        <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
         <span class="recipe-meta"><p>${escapeHtml(ingredientSummary(recipe))}</p><span class="recipe-arrow" aria-hidden="true">↗</span></span>
       </button>
     </article>`;
@@ -88,11 +113,11 @@ function filterRecipes() {
   });
 
   if (state.sort === "iba") {
-    results.sort((a, b) => Number(Boolean(b.iba)) - Number(Boolean(a.iba)) || a.name.localeCompare(b.name));
+    results.sort((a, b) => Number(Boolean(b.iba)) - Number(Boolean(a.iba)) || displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
   } else if (state.sort === "newest") {
-    results.sort((a, b) => String(b.modified).localeCompare(String(a.modified)) || a.name.localeCompare(b.name));
+    results.sort((a, b) => String(b.modified).localeCompare(String(a.modified)) || displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
   } else {
-    results.sort((a, b) => a.name.localeCompare(b.name));
+    results.sort((a, b) => displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
   }
   state.visible = results;
 }
@@ -102,11 +127,13 @@ function render() {
   const shown = state.visible.slice(0, state.limit);
   els.grid.innerHTML = shown.map(renderCard).join("");
   els.empty.hidden = state.visible.length !== 0;
-  els.status.textContent = `找到 ${state.visible.length} 款配方${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`;
+  els.status.textContent = L.current === "zh"
+    ? `找到 ${state.visible.length} 款配方${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`
+    : `${state.visible.length} recipes found${shown.length < state.visible.length ? ` · showing ${shown.length}` : ""}`;
 
   const remaining = state.visible.length - shown.length;
   els.loadMore.hidden = remaining <= 0;
-  els.loadMore.querySelector("span").textContent = Math.min(PAGE_SIZE, remaining);
+  els.loadMore.querySelector("b").textContent = `${Math.min(PAGE_SIZE, remaining)} ${pick("款", "")}`.trim();
 }
 
 function recipeSourceUrl(recipe) {
@@ -116,51 +143,53 @@ function recipeSourceUrl(recipe) {
 }
 
 function copyText(recipe) {
-  const ingredients = recipe.ingredients.map((item) => `- ${item.measure || "适量"} ${item.name}`.trim()).join("\n");
-  const instruction = recipe.instructions.zh || recipe.instructions.en;
-  return `${recipe.name}\n${labels.methods[recipe.method]} · ${labels.glasses[recipe.glass] || recipe.glass}\n\n材料\n${ingredients}\n\n方法\n${instruction}\n\n来源：TheCocktailDB · ${recipeSourceUrl(recipe)}`;
+  const ingredients = recipe.ingredients.map((item) => `- ${item.measure || pick("适量", "To taste")} ${item.name}`.trim()).join("\n");
+  const instruction = L.current === "zh" ? (recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
+  const heading = L.current === "zh" ? `${recipe.nameZh || recipe.name} / ${recipe.name}` : recipe.name;
+  return `${heading}\n${localLabel("methods", recipe.method)} · ${localLabel("glasses", recipe.glass)}\n\n${pick("材料", "Ingredients")}\n${ingredients}\n\n${pick("方法", "Method")}\n${instruction}\n\n${pick("来源", "Source")}：TheCocktailDB · ${recipeSourceUrl(recipe)}`;
 }
 
 function openRecipe(id) {
   const recipe = state.recipes.find((item) => item.id === id);
   if (!recipe) return;
-  const instruction = recipe.instructions.zh || recipe.instructions.en;
-  const translated = Boolean(recipe.instructions.zh);
+  state.activeRecipeId = id;
+  const instruction = L.current === "zh" ? (recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
+  const translated = L.current === "en" || Boolean(recipe.instructions.zh);
   const tags = [
-    labels.bases[recipe.base] || recipe.base,
-    labels.methods[recipe.method] || recipe.method,
-    labels.glasses[recipe.glass] || recipe.glass,
-    recipe.alcoholic === "Non alcoholic" ? "无酒精" : "含酒精",
+    localLabel("bases", recipe.base),
+    localLabel("methods", recipe.method),
+    localLabel("glasses", recipe.glass),
+    recipe.alcoholic === "Non alcoholic" ? pick("无酒精", "Non-alcoholic") : pick("含酒精", "Alcoholic"),
   ];
   if (recipe.iba) tags.unshift(`IBA · ${recipe.iba}`);
 
   els.dialogContent.innerHTML = `
     <article class="dialog-inner">
-      <p class="dialog-kicker">${escapeHtml(recipe.category)} · ${escapeHtml(recipe.id)}</p>
-      <h2 class="dialog-title" id="dialog-title">${escapeHtml(recipe.name)}</h2>
+      <p class="dialog-kicker">${escapeHtml(localLabel("categories", recipe.category))} · ${escapeHtml(recipe.id)}</p>
+      <h2 class="dialog-title" id="dialog-title">${nameHtml(recipe)}</h2>
       <div class="dialog-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       <div class="dialog-grid">
         <section aria-labelledby="ingredients-${recipe.id}">
-          <h3 id="ingredients-${recipe.id}">材料 / Ingredients</h3>
+          <h3 id="ingredients-${recipe.id}">${pick("材料 / Ingredients", "Ingredients")}</h3>
           <ul class="ingredient-list">
-            ${recipe.ingredients.map((item) => `<li><span>${escapeHtml(item.name)}</span><span>${escapeHtml(item.measure || "适量")}</span></li>`).join("")}
+            ${recipe.ingredients.map((item) => `<li><span>${escapeHtml(item.name)}</span><span>${escapeHtml(item.measure || pick("适量", "To taste"))}</span></li>`).join("")}
           </ul>
         </section>
         <section aria-labelledby="method-${recipe.id}">
-          <h3 id="method-${recipe.id}">方法 / ${escapeHtml(labels.methods[recipe.method])}</h3>
+          <h3 id="method-${recipe.id}">${pick("方法", "Method")} / ${escapeHtml(localLabel("methods", recipe.method))}</h3>
           <p class="instruction">${escapeHtml(instruction)}</p>
           ${translated ? "" : '<p class="translation-note">此条暂无中文步骤，保留来源英文。</p>'}
         </section>
       </div>
       <div class="dialog-actions">
-        <a href="order.html?add=${recipe.id}" class="add-to-order">加入点单 →</a>
-        <button class="copy-recipe" type="button" data-copy-id="${recipe.id}">复制配方</button>
-        <a href="${recipeSourceUrl(recipe)}" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
-        ${recipe.iba ? '<a href="https://iba-world.com/cocktails/" target="_blank" rel="noopener noreferrer">IBA 清单 ↗</a>' : ""}
+        <a href="order.html?add=${recipe.id}" class="add-to-order">${pick("加入点单 →", "Add to order →")}</a>
+        <button class="copy-recipe" type="button" data-copy-id="${recipe.id}">${pick("复制配方", "Copy recipe")}</button>
+        <a href="${recipeSourceUrl(recipe)}" target="_blank" rel="noopener noreferrer">${pick("查看原始记录 ↗", "View source record ↗")}</a>
+        ${recipe.iba ? `<a href="https://iba-world.com/cocktails/" target="_blank" rel="noopener noreferrer">${pick("IBA 清单 ↗", "IBA list ↗")}</a>` : ""}
       </div>
     </article>`;
 
-  els.dialog.showModal();
+  if (!els.dialog.open) els.dialog.showModal();
   document.querySelector(".dialog-close").focus();
 }
 
@@ -234,14 +263,14 @@ function bindEvents() {
     const button = event.target.closest("[data-copy-id]");
     if (!button) return;
     const recipe = state.recipes.find((item) => item.id === button.dataset.copyId);
-    navigator.clipboard.writeText(copyText(recipe)).then(() => showToast("配方已复制"));
+    navigator.clipboard.writeText(copyText(recipe)).then(() => showToast(pick("配方已复制", "Recipe copied")));
   });
   const themeButton = document.querySelector(".theme-toggle");
   themeButton.addEventListener("click", () => {
     const isDark = document.documentElement.dataset.theme === "dark";
     document.documentElement.dataset.theme = isDark ? "light" : "dark";
     themeButton.setAttribute("aria-pressed", String(!isDark));
-    themeButton.querySelector(".theme-label").textContent = isDark ? "纸色" : "夜色";
+    themeButton.querySelector(".theme-label").textContent = isDark ? L.t("common.themeLight") : L.t("common.themeDark");
     localStorage.setItem("cocktail-atlas-theme", isDark ? "light" : "dark");
   });
 }
@@ -255,14 +284,15 @@ async function loadData() {
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
       search: normalizeSearch([
-        recipe.name, recipe.category, recipe.glass, recipe.iba || "",
+        recipe.name, recipe.nameZh || "", recipe.category, recipe.glass, recipe.iba || "",
         recipe.instructions.zh || "", recipe.instructions.en || "",
         ...recipe.ingredients.map((item) => item.name),
       ].join(" ")),
     }));
-    document.querySelector('[data-stat="recipes"]').textContent = payload.meta.recipeCount.toLocaleString("zh-CN");
-    document.querySelector('[data-stat="ingredients"]').textContent = payload.meta.ingredientCount.toLocaleString("zh-CN");
-    document.querySelector('[data-stat="iba"]').textContent = payload.meta.ibaCount.toLocaleString("zh-CN");
+    const numberLocale = L.current === "zh" ? "zh-CN" : "en-US";
+    document.querySelector('[data-stat="recipes"]').textContent = payload.meta.recipeCount.toLocaleString(numberLocale);
+    document.querySelector('[data-stat="ingredients"]').textContent = payload.meta.ingredientCount.toLocaleString(numberLocale);
+    document.querySelector('[data-stat="iba"]').textContent = payload.meta.ibaCount.toLocaleString(numberLocale);
     document.querySelector("#sync-date").textContent = formatDate(payload.meta.updatedAt);
     document.querySelector("#sync-date").dateTime = payload.meta.updatedAt;
     els.loading.hidden = true;
@@ -270,7 +300,7 @@ async function loadData() {
   } catch (error) {
     console.error("Unable to load recipe archive", error);
     els.loading.hidden = true;
-    els.status.textContent = "配方数据暂时无法读取，请稍后刷新。";
+    els.status.textContent = pick("配方数据暂时无法读取，请稍后刷新。", "Recipe data is temporarily unavailable. Please refresh later.");
     els.empty.hidden = false;
   }
 }
@@ -280,8 +310,21 @@ if (savedTheme) {
   document.documentElement.dataset.theme = savedTheme;
   const dark = savedTheme === "dark";
   document.querySelector(".theme-toggle").setAttribute("aria-pressed", String(dark));
-  document.querySelector(".theme-label").textContent = dark ? "夜色" : "纸色";
+  document.querySelector(".theme-label").textContent = dark ? L.t("common.themeDark") : L.t("common.themeLight");
 }
+document.querySelector(".theme-label").textContent = document.documentElement.dataset.theme === "dark"
+  ? L.t("common.themeDark")
+  : L.t("common.themeLight");
 
 bindEvents();
 loadData();
+
+window.addEventListener("cocktail-locale-change", () => {
+  const dark = document.documentElement.dataset.theme === "dark";
+  document.querySelector(".theme-label").textContent = dark ? L.t("common.themeDark") : L.t("common.themeLight");
+  if (state.meta) {
+    document.querySelector("#sync-date").textContent = formatDate(state.meta.updatedAt);
+    render();
+    if (els.dialog.open && state.activeRecipeId) openRecipe(state.activeRecipeId);
+  }
+});
