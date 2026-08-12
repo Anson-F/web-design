@@ -153,6 +153,7 @@ function openRecipe(id) {
         </section>
       </div>
       <div class="dialog-actions">
+        <a href="order.html?add=${recipe.id}" class="add-to-order">加入点单 →</a>
         <button class="copy-recipe" type="button" data-copy-id="${recipe.id}">复制配方</button>
         <a href="${recipeSourceUrl(recipe)}" target="_blank" rel="noopener noreferrer">查看原始记录 ↗</a>
         ${recipe.iba ? '<a href="https://iba-world.com/cocktails/" target="_blank" rel="noopener noreferrer">IBA 清单 ↗</a>' : ""}
