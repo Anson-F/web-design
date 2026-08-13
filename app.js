@@ -70,6 +70,14 @@ function displayName(recipe) {
   return L.current === "zh" ? (recipe.nameZh || recipe.name) : recipe.name;
 }
 
+function posterAlt(recipe) {
+  return pick(`${recipe.nameZh || recipe.name} / ${recipe.name} 调酒海报`, `Minimal zine poster for ${recipe.name}`);
+}
+
+function posterImage(recipe, className = "cocktail-poster-image") {
+  return `<img class="${className}" src="assets/posters/${recipe.id}.jpg" alt="${escapeHtml(posterAlt(recipe))}" width="720" height="1200" loading="lazy" decoding="async">`;
+}
+
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
 }[char]));
@@ -93,9 +101,12 @@ function renderCard(recipe, index) {
   return `
     <article class="recipe-card">
       <button class="recipe-open" type="button" data-id="${recipe.id}" aria-label="${escapeHtml(pick(`查看 ${displayName(recipe)} 配方`, `View ${recipe.name} recipe`))}">
-        <span class="recipe-topline"><span>${String(index + 1).padStart(3, "0")} · ${escapeHtml(localLabel("bases", recipe.base))}</span>${iba}</span>
-        <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
-        <span class="recipe-meta"><p>${escapeHtml(ingredientSummary(recipe))}</p><span class="recipe-arrow" aria-hidden="true">↗</span></span>
+        <span class="recipe-poster">${posterImage(recipe)}</span>
+        <span class="recipe-card-copy">
+          <span class="recipe-topline"><span>${String(index + 1).padStart(3, "0")} · ${escapeHtml(localLabel("bases", recipe.base))}</span>${iba}</span>
+          <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
+          <span class="recipe-meta"><p>${escapeHtml(ingredientSummary(recipe))}</p><span class="recipe-arrow" aria-hidden="true">↗</span></span>
+        </span>
       </button>
     </article>`;
 }
@@ -165,9 +176,14 @@ function openRecipe(id) {
 
   els.dialogContent.innerHTML = `
     <article class="dialog-inner">
-      <p class="dialog-kicker">${escapeHtml(localLabel("categories", recipe.category))} · ${escapeHtml(recipe.id)}</p>
-      <h2 class="dialog-title" id="dialog-title">${nameHtml(recipe)}</h2>
-      <div class="dialog-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+      <div class="dialog-hero">
+        <div class="dialog-poster">${posterImage(recipe)}</div>
+        <div>
+          <p class="dialog-kicker">${escapeHtml(localLabel("categories", recipe.category))} · ${escapeHtml(recipe.id)}</p>
+          <h2 class="dialog-title" id="dialog-title">${nameHtml(recipe)}</h2>
+          <div class="dialog-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+        </div>
+      </div>
       <div class="dialog-grid">
         <section aria-labelledby="ingredients-${recipe.id}">
           <h3 id="ingredients-${recipe.id}">${pick("材料 / Ingredients", "Ingredients")}</h3>
@@ -318,6 +334,12 @@ document.querySelector(".theme-label").textContent = document.documentElement.da
 
 bindEvents();
 loadData();
+
+document.addEventListener("error", (event) => {
+  if (!event.target.matches?.(".cocktail-poster-image")) return;
+  event.target.closest(".recipe-poster, .dialog-poster")?.classList.add("is-missing");
+  event.target.hidden = true;
+}, true);
 
 window.addEventListener("cocktail-locale-change", () => {
   const dark = document.documentElement.dataset.theme === "dark";
