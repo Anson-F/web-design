@@ -10,8 +10,6 @@
 
 `order.html` 提供不含金额和付款环节的纯点单界面：选择酒款、调整数量、填写可选备注并生成可复制的点单纸。当前选择保存在浏览器本机。
 
-配方目录的每一款酒都使用紧凑横向杂志卡：3:5 海报置于左侧，酒名、英文原名、材料与精确用量置于右侧，底部保留技法、杯型和打开详情的箭头。目录按手机一列、平板两列、桌面三列排列；紧凑卡显示前四项材料与剩余数量，配方详情仍提供完整材料、步骤、复制和加入点单功能。
-
 点单酒单改为可触控左右滑动的 3:5 酒卡：海报作为整张卡片的纸面，酒名、真实诗句、作者与作品、原料和“加入”按钮都排入海报留白。支持触摸滑动、触控板/鼠标滚轮、键盘方向键和前后按钮，并使用 CSS Scroll Snap 定位。
 
 每款酒都匹配一条已出版且可追溯的公版诗句，数据记录在 `data/order-quotes.json`。匹配首先遵守地域规则：中国起源酒款只使用中国诗，其他国家和地区的酒款只使用非中国诗；酒款归属必须有来源或中国基酒证据，不能因为界面显示中文译名便算作中国酒。当前 441 款来源快照中没有一款具备可核验的中国起源或白酒、黄酒等中国基酒证据，因此全部进入外国诗池；中文诗仍保留在引文库中，供未来收录的中国酒使用。
@@ -70,7 +68,6 @@ python3 cocktail-atlas/scripts/test-ui.py
 python3 cocktail-atlas/scripts/test-localization.py
 python3 cocktail-atlas/scripts/test-chinese-copy.py
 python3 cocktail-atlas/scripts/test-taiwan-localization.py
-python3 cocktail-atlas/scripts/test-recipe-spreads.py
 python3 cocktail-atlas/scripts/test-order.py
 python3 cocktail-atlas/scripts/test-order-quotes.py
 ```
