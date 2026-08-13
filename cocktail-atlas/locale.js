@@ -215,19 +215,33 @@
     },
   };
 
-  let current = localStorage.getItem(STORAGE_KEY) === "en" ? "en" : "zh";
+  const traditional = window.CocktailTraditional?.convert || ((value) => String(value ?? ""));
+  dictionaries["zh-Hans"] = dictionaries.zh;
+  dictionaries["zh-Hant"] = new Proxy(dictionaries.zh, {
+    get(dictionary, key) {
+      const value = dictionary[key];
+      return typeof value === "string" ? traditional(value) : value;
+    },
+  });
+  delete dictionaries.zh;
+
+  const savedLocale = localStorage.getItem(STORAGE_KEY);
+  let current = savedLocale === "en" || savedLocale === "zh-Hant" ? savedLocale : "zh-Hans";
+
+  const isChinese = () => current.startsWith("zh");
+  const localizeChinese = (value) => current === "zh-Hant" ? traditional(value) : String(value ?? "");
 
   function interpolate(value, variables = {}) {
     return Object.entries(variables).reduce((text, [key, replacement]) => text.replaceAll(`{${key}}`, replacement), value);
   }
 
   function t(key, variables) {
-    const value = dictionaries[current][key] ?? dictionaries.zh[key] ?? key;
+    const value = dictionaries[current][key] ?? dictionaries["zh-Hans"][key] ?? key;
     return interpolate(value, variables);
   }
 
   function translate(root = document) {
-    document.documentElement.lang = current === "zh" ? "zh-CN" : "en";
+    document.documentElement.lang = current === "zh-Hans" ? "zh-CN" : current === "zh-Hant" ? "zh-Hant" : "en";
     root.querySelectorAll("[data-i18n]").forEach((element) => { element.textContent = t(element.dataset.i18n); });
     root.querySelectorAll("[data-i18n-html]").forEach((element) => { element.innerHTML = t(element.dataset.i18nHtml); });
     root.querySelectorAll("[data-i18n-placeholder]").forEach((element) => { element.placeholder = t(element.dataset.i18nPlaceholder); });
@@ -258,6 +272,12 @@
     t,
     translate,
     setLocale,
+    pick(zh, en) { return isChinese() ? localizeChinese(zh) : en; },
+    zh: localizeChinese,
+    toTraditional: traditional,
+    get isChinese() { return isChinese(); },
+    get isTraditional() { return current === "zh-Hant"; },
+    get languageTag() { return current === "zh-Hans" ? "zh-CN" : current === "zh-Hant" ? "zh-Hant" : "en"; },
     get current() { return current; },
   };
 

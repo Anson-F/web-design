@@ -1,12 +1,14 @@
 const DATA_URL = "data/recipes.json";
+const POETRY_URL = "data/order-poetry.json";
 const ORDER_KEY = "cocktail-atlas-order-v1";
 const ORDER_NOTE_KEY = "cocktail-atlas-order-note-v1";
 const PAGE_SIZE = 32;
 const L = window.CocktailLocale;
-const pick = (zh, en) => (L.current === "zh" ? zh : en);
+const pick = (zh, en) => L.pick(zh, en);
 
 const state = {
   recipes: [],
+  poetry: new Map(),
   visible: [],
   cart: new Map(),
   query: "",
@@ -52,16 +54,16 @@ const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => (
 
 function localLabel(dictionary, key) {
   const value = dictionary[key] || [key, key];
-  return value[L.current === "zh" ? 0 : 1];
+  return L.isChinese ? L.zh(value[0]) : value[1];
 }
 
 function nameHtml(recipe) {
   if (L.current === "en") return `<span class="localized-name" lang="en">${escapeHtml(recipe.name)}</span>`;
-  return `<span class="localized-name" lang="zh-CN">${escapeHtml(recipe.nameZh || recipe.name)}</span><small class="original-name" lang="en">${escapeHtml(recipe.name)}</small>`;
+  return `<span class="localized-name" lang="${L.languageTag}">${escapeHtml(L.zh(recipe.nameZh || recipe.name))}</span><small class="original-name" lang="en">${escapeHtml(recipe.name)}</small>`;
 }
 
 function displayName(recipe) {
-  return L.current === "zh" ? (recipe.nameZh || recipe.name) : recipe.name;
+  return L.isChinese ? L.zh(recipe.nameZh || recipe.name) : recipe.name;
 }
 
 function posterAlt(recipe) {
@@ -79,6 +81,20 @@ function normalizeSearch(value) {
 function ingredientSummary(recipe) {
   const names = recipe.ingredients.slice(0, 5).map((item) => item.name);
   return `${names.join(" · ")}${recipe.ingredients.length > 5 ? " · …" : ""}`;
+}
+
+function poetryHtml(recipe) {
+  const poem = state.poetry.get(recipe.id);
+  if (!poem) return "";
+  const foreign = !poem.language.startsWith("zh");
+  const localizedLine = L.current === "zh-Hant" ? poem.translation.zhHant : L.current === "zh-Hans" ? poem.translation.zhHans : poem.translation.en;
+  const chineseTranslation = L.current === "zh-Hant" ? poem.translation.zhHant : poem.translation.zhHans;
+  const original = foreign ? poem.original : localizedLine;
+  return `
+    <figure class="drink-poem${foreign ? " is-foreign" : ""}" data-poem-id="${recipe.id}" title="${escapeHtml(L.current === "zh-Hant" ? poem.basis.zhHant : L.current === "zh-Hans" ? poem.basis.zhHans : poem.basis.en)}">
+      <p class="poem-original" lang="${foreign ? poem.language : L.languageTag}">${escapeHtml(original)}</p>
+      ${foreign ? `<p class="poem-translation" lang="${L.current === "zh-Hant" ? "zh-Hant" : "zh-CN"}" data-label="${L.current === "zh-Hant" ? "譯 · " : "译 · "}">${escapeHtml(chineseTranslation)}</p>` : ""}
+    </figure>`;
 }
 
 function loadSavedOrder() {
@@ -110,7 +126,7 @@ function filterRecipes() {
     if (state.filter === "non-alcoholic" && recipe.alcoholic !== "Non alcoholic") return false;
     if (!["all", "iba", "non-alcoholic"].includes(state.filter) && recipe.base !== state.filter) return false;
     return words.every((word) => recipe.search.includes(word));
-  }).sort((a, b) => displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
+  }).sort((a, b) => displayName(a).localeCompare(displayName(b), L.languageTag));
 }
 
 function menuItem(recipe) {
@@ -123,6 +139,7 @@ function menuItem(recipe) {
         <div class="order-menu-copy">
           <span>${escapeHtml(localLabel(baseLabels, recipe.base))} · ${escapeHtml(localLabel(methodLabels, recipe.method))} · ${escapeHtml(flag)}</span>
           <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
+          ${poetryHtml(recipe)}
           <p>${escapeHtml(ingredientSummary(recipe))}</p>
         </div>
         <button class="add-drink${quantity ? " has-quantity" : ""}" type="button" data-add-id="${recipe.id}" aria-label="${escapeHtml(pick(`加入一杯 ${displayName(recipe)}`, `Add one ${recipe.name}`))}">
@@ -136,8 +153,8 @@ function renderMenu() {
   filterRecipes();
   const shown = state.visible.slice(0, state.limit);
   els.menu.innerHTML = shown.map(menuItem).join("");
-  els.resultsStatus.textContent = L.current === "zh"
-    ? `酒单共 ${state.visible.length} 款${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`
+  els.resultsStatus.textContent = L.isChinese
+    ? L.zh(`酒单共 ${state.visible.length} 款${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`)
     : `${state.visible.length} drinks${shown.length < state.visible.length ? ` · showing ${shown.length}` : ""}`;
   els.emptyResults.hidden = state.visible.length !== 0;
   const remaining = state.visible.length - shown.length;
@@ -170,7 +187,7 @@ function renderTicket() {
 
   const total = totalGlasses();
   document.querySelectorAll("[data-order-total]").forEach((node) => { node.textContent = total; });
-  document.querySelectorAll("[data-order-unit]").forEach((node) => { node.textContent = L.current === "zh" ? "杯" : (total === 1 ? "glass" : "glasses"); });
+  document.querySelectorAll("[data-order-unit]").forEach((node) => { node.textContent = L.isChinese ? "杯" : (total === 1 ? "glass" : "glasses"); });
   els.emptyTicket.hidden = total > 0;
   els.confirm.disabled = total === 0;
   els.clearOrder.disabled = total === 0;
@@ -215,11 +232,11 @@ function orderCode() {
 function orderText(code) {
   const lines = [...state.cart.entries()].map(([id, quantity]) => {
     const recipe = state.recipes.find((item) => item.id === id);
-    const title = recipe ? (L.current === "zh" ? `${recipe.nameZh || recipe.name} / ${recipe.name}` : recipe.name) : id;
+    const title = recipe ? (L.isChinese ? `${displayName(recipe)} / ${recipe.name}` : recipe.name) : id;
     return pick(`${quantity} 杯 · ${title}`, `${quantity} × ${title}`);
   });
-  return L.current === "zh"
-    ? `酒谱点单 ${code}\n${lines.join("\n")}\n共 ${totalGlasses()} 杯${els.note.value.trim() ? `\n备注：${els.note.value.trim()}` : ""}`
+  return L.isChinese
+    ? L.zh(`酒谱点单 ${code}\n${lines.join("\n")}\n共 ${totalGlasses()} 杯${els.note.value.trim() ? `\n备注：${els.note.value.trim()}` : ""}`)
     : `Cocktail Atlas order ${code}\n${lines.join("\n")}\n${totalGlasses()} glasses total${els.note.value.trim() ? `\nNote: ${els.note.value.trim()}` : ""}`;
 }
 
@@ -349,12 +366,13 @@ function bindEvents() {
 
 async function loadData() {
   try {
-    const response = await fetch(DATA_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
+    const [recipeResponse, poetryResponse] = await Promise.all([fetch(DATA_URL), fetch(POETRY_URL)]);
+    if (!recipeResponse.ok || !poetryResponse.ok) throw new Error(`HTTP ${recipeResponse.status}/${poetryResponse.status}`);
+    const [payload, poetryPayload] = await Promise.all([recipeResponse.json(), poetryResponse.json()]);
+    state.poetry = new Map(poetryPayload.poems.map((poem) => [poem.id, poem]));
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
-      search: normalizeSearch([recipe.name, recipe.nameZh || "", recipe.category, recipe.iba || "", ...recipe.ingredients.map((item) => item.name)].join(" ")),
+      search: normalizeSearch([recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.iba || "", ...recipe.ingredients.map((item) => item.name)].join(" ")),
     }));
     els.loading.hidden = true;
     loadSavedOrder();

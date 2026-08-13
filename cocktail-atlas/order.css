@@ -140,7 +140,29 @@
 .order-menu-copy h3 { font-size: clamp(1.7rem, 7vw, 2.45rem); line-height: .96; overflow-wrap: anywhere; }
 .order-menu-copy h3 i { color: var(--cherry); font-weight: 400; }
 .order-menu-copy h3 .original-name { margin-block-start: 6px; font-size: .58rem; }
-.order-menu-copy p { max-width: 60ch; margin: 11px 0 0; color: var(--ink-soft); font-size: .76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-menu-copy > p { max-width: 60ch; margin: 11px 0 0; color: var(--ink-soft); font-size: .76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drink-poem {
+  max-width: 58ch;
+  margin: 15px 0 3px;
+  padding-block: 10px;
+  border-block: 1px solid color-mix(in srgb, var(--paper-deep) 46%, transparent);
+}
+.drink-poem p { margin: 0; white-space: normal; overflow: visible; text-overflow: clip; }
+.drink-poem .poem-original {
+  color: var(--ink);
+  font: italic clamp(.82rem, 2.1vw, .98rem)/1.55 var(--display);
+  letter-spacing: .015em;
+}
+.drink-poem .poem-original::before { content: "“"; color: var(--cherry); }
+.drink-poem .poem-original::after { content: "”"; color: var(--cherry); }
+.drink-poem .poem-translation {
+  margin-block-start: 5px;
+  color: var(--ink-soft);
+  font-size: .66rem;
+  line-height: 1.55;
+}
+.drink-poem .poem-translation::before { content: attr(data-label); color: var(--cherry); font: .56rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.drink-poem[title] { cursor: help; }
 .add-drink {
   min-width: 74px;
   min-height: 48px;
@@ -295,6 +317,13 @@
   .order-menu-item-inner { grid-template-columns: 88px minmax(0, 1fr) auto; padding: 25px 18px; }
   .order-menu-poster { width: 88px; }
   .confirmation-sheet { padding: 0 48px 48px; }
+}
+
+@media (max-width: 520px) {
+  .order-menu-item-inner { grid-template-columns: 64px minmax(0, 1fr) auto; gap: 13px; align-items: start; }
+  .order-menu-poster { width: 64px; }
+  .add-drink { min-width: 60px; }
+  .drink-poem { margin-block-start: 12px; }
 }
 
 @media (min-width: 980px) {
