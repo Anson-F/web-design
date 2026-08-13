@@ -1,6 +1,7 @@
 const DATA_URL = "data/recipes.json";
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
+const T = window.CocktailTerms;
 const pick = (zh, en) => L.pick(zh, en);
 
 const state = {
@@ -41,15 +42,22 @@ const labels = {
     layer: ["分层", "Layer"], muddle: ["捣压", "Muddle"], other: ["其他", "Other"],
   },
   glasses: {
-    "Cocktail glass": "鸡尾酒杯", "Highball glass": "高球杯", "Collins Glass": "柯林杯", "Collins glass": "柯林杯",
-    "Old-fashioned glass": "古典杯", "Shot glass": "烈酒杯", "Champagne flute": "香槟笛形杯",
-    "Whiskey sour glass": "酸酒杯", "Margarita/Coupette glass": "玛格丽特杯",
-    "Coffee mug": "咖啡杯", "Beer mug": "啤酒杯", "Wine Glass": "葡萄酒杯",
+    "Balloon Glass": "气球杯", "Beer Glass": "啤酒杯", "Beer mug": "啤酒马克杯", "Beer pilsner": "皮尔森啤酒杯",
+    "Brandy snifter": "白兰地杯", "Champagne Flute": "笛形香槟杯", "Champagne flute": "笛形香槟杯",
+    "Cocktail Glass": "鸡尾酒杯", "Cocktail glass": "鸡尾酒杯", "Coffee Mug": "咖啡马克杯", "Coffee mug": "咖啡马克杯",
+    "Collins Glass": "柯林杯", "Collins glass": "柯林杯", "Copper Mug": "铜马克杯", "Cordial glass": "利口酒杯",
+    "Coupe Glass": "碟形香槟杯", "Highball Glass": "高球杯", "Highball glass": "高球杯", "Hurricane glass": "飓风杯",
+    "Irish coffee cup": "爱尔兰咖啡杯", "Jar": "玻璃罐", "Margarita glass": "玛格丽特杯",
+    "Margarita/Coupette glass": "玛格丽特杯", "Martini Glass": "马天尼杯", "Mason jar": "梅森罐",
+    "Nick and Nora Glass": "尼克诺拉杯", "Old-Fashioned glass": "古典杯", "Old-fashioned glass": "古典杯",
+    "Pint glass": "品脱杯", "Pitcher": "扎壶", "Pousse cafe glass": "彩虹杯", "Punch Bowl": "潘趣碗",
+    "Punch bowl": "潘趣碗", "Shot glass": "shot 杯", "Shot Glass": "shot 杯", "Whiskey Glass": "威士忌杯",
+    "Whiskey sour glass": "酸酒杯", "White wine glass": "白葡萄酒杯", "Wine Glass": "葡萄酒杯",
   },
   categories: {
-    "Cocktail": "鸡尾酒", "Ordinary Drink": "普通饮品", "Shot": "烈饮", "Coffee / Tea": "咖啡 / 茶",
-    "Punch / Party Drink": "宾治 / 派对饮品", "Homemade Liqueur": "自制利口酒", "Soft Drink": "无酒精饮品",
-    "Cocoa": "可可", "Other / Unknown": "其他",
+    "Cocktail": "鸡尾酒", "Ordinary Drink": "混合饮品", "Shot": "shot", "Coffee / Tea": "咖啡 / 茶",
+    "Punch / Party Drink": "潘趣 / 派对饮品", "Homemade Liqueur": "自制利口酒", "Soft Drink": "软饮",
+    "Cocoa": "可可", "Beer": "啤酒", "Shake": "奶昔", "Other / Unknown": "其他",
   },
 };
 
@@ -92,7 +100,7 @@ function formatDate(value) {
 }
 
 function ingredientSummary(recipe) {
-  const names = recipe.ingredients.slice(0, 4).map((item) => item.name);
+  const names = recipe.ingredients.slice(0, 4).map((item) => L.isChinese ? L.zh(T.ingredient(item.name)) : item.name);
   return `${names.join(" · ")}${recipe.ingredients.length > 4 ? " · …" : ""}`;
 }
 
@@ -154,7 +162,11 @@ function recipeSourceUrl(recipe) {
 }
 
 function copyText(recipe) {
-  const ingredients = recipe.ingredients.map((item) => `- ${item.measure || pick("适量", "To taste")} ${item.name}`.trim()).join("\n");
+  const ingredients = recipe.ingredients.map((item) => {
+    const name = L.isChinese ? L.zh(T.ingredient(item.name)) : item.name;
+    const measure = L.isChinese ? L.zh(T.measure(item.measure || "适量")) : (item.measure || "To taste");
+    return `- ${measure} ${name}`.trim();
+  }).join("\n");
   const instruction = L.isChinese ? L.zh(recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
   const heading = L.isChinese ? `${displayName(recipe)} / ${recipe.name}` : recipe.name;
   return `${heading}\n${localLabel("methods", recipe.method)} · ${localLabel("glasses", recipe.glass)}\n\n${pick("材料", "Ingredients")}\n${ingredients}\n\n${pick("方法", "Method")}\n${instruction}\n\n${pick("来源", "Source")}：TheCocktailDB · ${recipeSourceUrl(recipe)}`;
@@ -188,7 +200,11 @@ function openRecipe(id) {
         <section aria-labelledby="ingredients-${recipe.id}">
           <h3 id="ingredients-${recipe.id}">${pick("材料 / Ingredients", "Ingredients")}</h3>
           <ul class="ingredient-list">
-            ${recipe.ingredients.map((item) => `<li><span>${escapeHtml(item.name)}</span><span>${escapeHtml(item.measure || pick("适量", "To taste"))}</span></li>`).join("")}
+            ${recipe.ingredients.map((item) => {
+              const name = L.isChinese ? L.zh(T.ingredient(item.name)) : item.name;
+              const measure = L.isChinese ? L.zh(T.measure(item.measure || "适量")) : (item.measure || "To taste");
+              return `<li><span>${escapeHtml(name)}</span><span>${escapeHtml(measure)}</span></li>`;
+            }).join("")}
           </ul>
         </section>
         <section aria-labelledby="method-${recipe.id}">
@@ -302,7 +318,7 @@ async function loadData() {
       search: normalizeSearch([
         recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.glass, recipe.iba || "",
         recipe.instructions.zh || "", recipe.instructions.en || "",
-        ...recipe.ingredients.map((item) => item.name),
+        ...recipe.ingredients.flatMap((item) => [item.name, T.ingredient(item.name), L.toTraditional(T.ingredient(item.name))]),
       ].join(" ")),
     }));
     const numberLocale = L.isChinese ? L.languageTag : "en-US";

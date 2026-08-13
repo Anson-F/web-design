@@ -4,6 +4,7 @@ const ORDER_KEY = "cocktail-atlas-order-v1";
 const ORDER_NOTE_KEY = "cocktail-atlas-order-note-v1";
 const PAGE_SIZE = 32;
 const L = window.CocktailLocale;
+const T = window.CocktailTerms;
 const pick = (zh, en) => L.pick(zh, en);
 
 const state = {
@@ -51,6 +52,14 @@ const methodLabels = {
   layer: ["分层", "Layer"], muddle: ["捣压", "Muddle"], other: ["其他", "Other"],
 };
 
+const categoryLabels = {
+  "Beer": ["啤酒", "Beer"], "Cocktail": ["鸡尾酒", "Cocktail"], "Cocoa": ["可可", "Cocoa"],
+  "Coffee / Tea": ["咖啡 / 茶", "Coffee / Tea"], "Homemade Liqueur": ["自制利口酒", "Homemade Liqueur"],
+  "Ordinary Drink": ["混合饮品", "Mixed Drink"], "Other / Unknown": ["其他", "Other"],
+  "Punch / Party Drink": ["潘趣 / 派对饮品", "Punch / Party Drink"], "Shake": ["奶昔", "Shake"],
+  "Shot": ["shot", "Shot"], "Soft Drink": ["软饮", "Soft Drink"],
+};
+
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
 }[char]));
@@ -82,7 +91,7 @@ function normalizeSearch(value) {
 }
 
 function ingredientSummary(recipe) {
-  const names = recipe.ingredients.slice(0, 5).map((item) => item.name);
+  const names = recipe.ingredients.slice(0, 5).map((item) => L.isChinese ? L.zh(T.ingredient(item.name)) : item.name);
   return `${names.join(" · ")}${recipe.ingredients.length > 5 ? " · …" : ""}`;
 }
 
@@ -147,7 +156,7 @@ function filterRecipes() {
 
 function menuItem(recipe) {
   const quantity = state.cart.get(recipe.id) || 0;
-  const flag = recipe.iba ? `IBA · ${recipe.iba}` : recipe.category;
+  const flag = recipe.iba ? `IBA · ${recipe.iba}` : localLabel(categoryLabels, recipe.category);
   return `
     <article class="order-menu-item" data-recipe-id="${recipe.id}">
       <div class="order-menu-item-inner">
@@ -435,7 +444,7 @@ async function loadData() {
     state.quotes = new Map(quotePayload.assignments.map((assignment) => [assignment.id, { quote: quoteLibrary.get(assignment.quoteId), basis: assignment.basis }]));
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
-      search: normalizeSearch([recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.iba || "", ...recipe.ingredients.map((item) => item.name)].join(" ")),
+      search: normalizeSearch([recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.iba || "", ...recipe.ingredients.flatMap((item) => [item.name, T.ingredient(item.name), L.toTraditional(T.ingredient(item.name))])].join(" ")),
     }));
     els.loading.hidden = true;
     loadSavedOrder();

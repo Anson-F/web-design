@@ -32,6 +32,7 @@ def main() -> None:
         ROOT / "locale.js",
         ROOT / "app.js",
         ROOT / "order.js",
+        ROOT / "cocktail-terms.js",
         ROOT / "index.html",
         ROOT / "order.html",
         RECIPES_PATH,
