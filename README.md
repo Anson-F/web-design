@@ -2,7 +2,9 @@
 
 一个可直接发布在 GitHub Pages 的静态鸡尾酒配方档案。界面支持简体中文、繁體中文和英文，可按酒名、原料、基酒、IBA 标记与调制技法检索。
 
-网站支持简体中文、繁體中文与英文切换，并在浏览器中记忆语言偏好。中文模式将中文酒名作为主标题、英文原名作为小号副标题；英文模式仅显示英文酒名。`data/name-zh.json` 保存中文酒名映射，同步配方时会自动合并；`data/zh-hant.json` 保存 441 款酒名与步骤的繁体版本。
+网站支持简体中文、繁體中文与英文切换，并在浏览器中记忆语言偏好。中文模式将中文酒名作为主标题、英文原名作为小号副标题；英文模式仅显示英文酒名。`data/name-zh.json` 保存中文酒名映射，`data/instruction-zh.json` 保存经校订的简体中文步骤，`data/zh-hant.json` 保存 441 款酒名与步骤的繁体版本。
+
+中文配方使用当代中文酒吧语境，不采用逐词机翻：`shot` 保留英文，`shot glass` 写作“shot 杯”，`shaker` 写作“摇酒壶”，`rocks / old fashioned glass` 写作“古典杯”，`gin`、`tonic`、`lime` 分别使用“金酒”“汤力水”“青柠”。原料与用量的界面译名集中在 `cocktail-terms.js`，便于持续审校并保证详情、搜索、复制配方和点单卡片用词一致。
 
 `order.html` 提供不含金额和付款环节的纯点单界面：选择酒款、调整数量、填写可选备注并生成可复制的点单纸。当前选择保存在浏览器本机。
 
@@ -37,9 +39,11 @@ Node.js 18+：
 
 ```sh
 node cocktail-atlas/scripts/sync-recipes.mjs
+python3 cocktail-atlas/scripts/localize-recipes-zh.py
+python3 cocktail-atlas/scripts/build-traditional-localization.py
 ```
 
-生成文件为 `cocktail-atlas/data/recipes.json`。更新后请检查收录量、空字段和网页筛选行为再提交。
+生成文件为 `cocktail-atlas/data/recipes.json`。同步脚本会优先复用已校订的 `instruction-zh.json`，避免第三方机翻覆盖中文文案；本地化脚本会统一酒名、步骤和术语，随后生成繁体资产。更新后请检查收录量、空字段和网页筛选行为再提交。
 
 ## 更新视觉证据与检查海报
 
@@ -60,6 +64,7 @@ python3 cocktail-atlas/scripts/test-posters.py
 ```sh
 python3 cocktail-atlas/scripts/test-ui.py
 python3 cocktail-atlas/scripts/test-localization.py
+python3 cocktail-atlas/scripts/test-chinese-copy.py
 python3 cocktail-atlas/scripts/test-order.py
 python3 cocktail-atlas/scripts/test-order-quotes.py
 ```

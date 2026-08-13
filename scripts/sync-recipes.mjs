@@ -5,9 +5,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(__dirname, "../data/recipes.json");
 const namesPath = resolve(__dirname, "../data/name-zh.json");
+const instructionsPath = resolve(__dirname, "../data/instruction-zh.json");
 const letters = "abcdefghijklmnopqrstuvwxyz0123456789".split("");
 const apiRoot = "https://www.thecocktaildb.com/api/json/v1/1/search.php?f=";
 const chineseNames = JSON.parse(await readFile(namesPath, "utf8").catch(() => "{}"));
+const chineseInstructions = JSON.parse(await readFile(instructionsPath, "utf8").catch(() => "{}"));
 
 function deriveMethod(instructions = "") {
   const text = instructions.toLowerCase();
@@ -56,7 +58,7 @@ function normalise(drink) {
     method: deriveMethod(english),
     base: deriveBase(drink, ingredients),
     instructions: {
-      zh: drink["strInstructionsZH-HANS"]?.trim() || "",
+      zh: chineseInstructions[drink.idDrink] || drink["strInstructionsZH-HANS"]?.trim() || "",
       en: english,
     },
     ingredients,
