@@ -81,9 +81,17 @@
             <button type="button" class="filter-chip" data-filter="tequila" aria-pressed="false" data-i18n="common.tequila">龙舌兰</button>
           </div>
 
-          <p class="order-results-status" id="order-results-status" aria-live="polite" data-i18n="order.loading">正在展开酒单…</p>
-          <div class="order-loading" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          <div class="order-menu-list" id="order-menu-list"></div>
+          <div class="order-carousel-toolbar">
+            <p class="order-results-status" id="order-results-status" aria-live="polite" data-i18n="order.loading">正在展开酒单…</p>
+            <div class="order-carousel-actions">
+              <span data-i18n="order.swipeHint">左右滑动翻酒单</span>
+              <output id="order-carousel-count" aria-live="polite">00 / 00</output>
+              <button type="button" id="order-carousel-prev" aria-label="上一张酒卡" data-i18n-aria-label="order.previousCard">←</button>
+              <button type="button" id="order-carousel-next" aria-label="下一张酒卡" data-i18n-aria-label="order.nextCard">→</button>
+            </div>
+          </div>
+          <div class="order-loading" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="order-menu-list" id="order-menu-list" tabindex="0" aria-label="横向滑动酒单" data-i18n-aria-label="order.carouselLabel"></div>
           <div class="order-empty-results" id="order-empty-results" hidden>
             <b aria-hidden="true">∅</b>
             <p data-i18n="order.empty">没有找到这杯，试试其他酒名或原料。</p>

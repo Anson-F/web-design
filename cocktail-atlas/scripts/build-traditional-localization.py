@@ -35,7 +35,7 @@ def main() -> None:
         ROOT / "index.html",
         ROOT / "order.html",
         RECIPES_PATH,
-        ROOT / "data" / "order-poetry.json",
+        ROOT / "data" / "order-quotes.json",
     ]
     characters = set()
     for path in source_paths:

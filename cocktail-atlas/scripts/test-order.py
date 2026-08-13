@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from playwright.sync_api import sync_playwright, expect
 
 
@@ -51,15 +52,22 @@ with sync_playwright() as playwright:
     expect(page.locator("#order-results-status")).to_contain_text("酒单共 441 款")
     expect(page.locator(".order-menu-item")).to_have_count(32)
     expect(page.locator(".drink-poem")).to_have_count(32)
+    expect(page.locator(".drink-poem figcaption a").first).to_have_attribute("href", re.compile(r"^https://"))
     expect(page.get_by_role("button", name="确认点单")).to_be_disabled()
+    assert page.locator("#order-menu-list").evaluate("element => getComputedStyle(element).scrollSnapType.includes('x')")
+    assert page.locator(".order-menu-item-inner").first.evaluate("element => getComputedStyle(element).aspectRatio === '3 / 5'")
     assert_no_horizontal_overflow(page)
     assert_no_visible_amounts(page)
 
     page.locator("#order-search").fill("Mojito")
     page.wait_for_timeout(250)
     expect(page.locator(".order-menu-item").first).to_be_visible()
-    expect(page.locator('[data-poem-id="11000"] .poem-original')).to_have_attribute("lang", "es")
-    expect(page.locator('[data-poem-id="11000"] .poem-translation')).to_have_text("青柠触到冰时，薄荷便醒来。")
+    expect(page.locator('[data-poem-id="11000"] .poem-original')).not_to_be_empty()
+    expect(page.locator('[data-poem-id="11000"] figcaption')).not_to_be_empty()
+    initial_scroll = page.locator("#order-menu-list").evaluate("element => element.scrollLeft")
+    page.get_by_role("button", name="下一张酒卡").click()
+    page.wait_for_timeout(500)
+    assert page.locator("#order-menu-list").evaluate("element => element.scrollLeft") > initial_scroll
     first_add = page.locator("[data-add-id]").first
     first_add.click()
     first_add.click()
@@ -119,5 +127,5 @@ with sync_playwright() as playwright:
 
     browser.close()
     assert not errors, errors
-    print("PASS: order search, add, quantity, persistence, note, confirmation, copy, recipe handoff, responsive layout, and no visible amounts")
+    print("PASS: horizontal card carousel, sourced verse, search, add, quantity, persistence, note, confirmation, copy, recipe handoff, responsive layout, and no visible amounts")
     print(f"Screenshots: {SCREENSHOT_DIR}")
