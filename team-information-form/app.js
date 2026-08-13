@@ -1,12 +1,9 @@
-const PEOPLE_COUNT = 5;
 const receiverEmail = String(window.FORM_RECEIVER_EMAIL || "").trim();
-const form = document.querySelector("#team-form");
+const form = document.querySelector("#participant-form");
 const peopleFields = document.querySelector("#people-fields");
 const template = document.querySelector("#person-template");
 const alertBox = document.querySelector("#form-alert");
 const submitButton = document.querySelector("#submit-button");
-const progressLabel = document.querySelector("#progress-label");
-const progressBar = document.querySelector("#progress-bar");
 
 const fieldMessages = {
   first_name: "Enter a first name.",
@@ -19,40 +16,27 @@ const fieldMessages = {
   survey_consent: "Select one option."
 };
 
-for (let personNumber = 1; personNumber <= PEOPLE_COUNT; personNumber += 1) {
-  const fragment = template.content.cloneNode(true);
-  const card = fragment.querySelector(".person-card");
-  card.dataset.person = String(personNumber);
+const fragment = template.content.cloneNode(true);
 
-  fragment.querySelectorAll("[data-person-number]").forEach((node) => {
-    node.textContent = String(personNumber);
+fragment.querySelectorAll("[data-field]").forEach((control) => {
+  const fieldName = control.dataset.field;
+  control.name = fieldName;
+  control.id = fieldName;
+});
+
+fragment.querySelectorAll("[data-for]").forEach((label) => {
+  label.htmlFor = label.dataset.for;
+});
+
+fragment.querySelectorAll("[data-error-for]").forEach((error) => {
+  const fieldName = error.dataset.errorFor;
+  error.id = `${fieldName}_error`;
+  fragment.querySelectorAll(`[name="${fieldName}"]`).forEach((control) => {
+    control.setAttribute("aria-describedby", error.id);
   });
+});
 
-  fragment.querySelectorAll("[data-field]").forEach((control) => {
-    const fieldName = control.dataset.field;
-    const inputName = `person_${personNumber}_${fieldName}`;
-    control.name = inputName;
-    control.id = inputName;
-
-    if (control.type === "radio") {
-      control.name = inputName;
-    }
-  });
-
-  fragment.querySelectorAll("[data-for]").forEach((label) => {
-    label.htmlFor = `person_${personNumber}_${label.dataset.for}`;
-  });
-
-  fragment.querySelectorAll("[data-error-for]").forEach((error) => {
-    const inputName = `person_${personNumber}_${error.dataset.errorFor}`;
-    error.id = `${inputName}_error`;
-    fragment.querySelectorAll(`[name="${inputName}"]`).forEach((control) => {
-      control.setAttribute("aria-describedby", error.id);
-    });
-  });
-
-  peopleFields.appendChild(fragment);
-}
+peopleFields.appendChild(fragment);
 
 const cards = [...document.querySelectorAll(".person-card")];
 
@@ -112,18 +96,12 @@ function getUniqueControls(card) {
   });
 }
 
-function updateProgress() {
-  let completeCount = 0;
-
+function updateCompletionStatus() {
   cards.forEach((card) => {
     const complete = getUniqueControls(card).every(isFieldValid);
     card.classList.toggle("is-complete", complete);
     card.querySelector("[data-person-status]").textContent = complete ? "Complete" : "Incomplete";
-    if (complete) completeCount += 1;
   });
-
-  progressLabel.textContent = `${completeCount} of ${PEOPLE_COUNT} people complete`;
-  progressBar.style.width = `${(completeCount / PEOPLE_COUNT) * 100}%`;
 }
 
 function showAlert(message, type = "error") {
@@ -143,7 +121,7 @@ form.addEventListener("input", (event) => {
   if (event.target.matches("[data-field]")) {
     if (!alertBox.hidden && !alertBox.classList.contains("success")) hideAlert();
     setFieldValidity(event.target, false);
-    updateProgress();
+    updateCompletionStatus();
   }
 });
 
@@ -151,7 +129,7 @@ form.addEventListener("change", (event) => {
   if (event.target.matches("[data-field]")) {
     if (!alertBox.hidden && !alertBox.classList.contains("success")) hideAlert();
     setFieldValidity(event.target, false);
-    updateProgress();
+    updateCompletionStatus();
   }
 });
 
@@ -183,7 +161,7 @@ form.addEventListener("submit", async (event) => {
   submitButton.classList.add("is-loading");
 
   const payload = Object.fromEntries(new FormData(form));
-  payload._subject = `Team information submission — ${payload.person_1_first_name} ${payload.person_1_last_name}`;
+  payload._subject = `Participant information submission — ${payload.first_name} ${payload.last_name}`;
   payload._template = "table";
   payload._captcha = "false";
 
@@ -204,8 +182,8 @@ form.addEventListener("submit", async (event) => {
 
     form.reset();
     controls.forEach((control) => control.removeAttribute("aria-invalid"));
-    updateProgress();
-    showAlert("Thank you. The team information was submitted successfully.", "success");
+    updateCompletionStatus();
+    showAlert("Thank you. Your information was submitted successfully.", "success");
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (error) {
     showAlert("We could not submit the form. Check your connection and try again.");
@@ -215,4 +193,4 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-updateProgress();
+updateCompletionStatus();

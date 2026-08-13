@@ -1,10 +1,10 @@
-# Team Information Form
+# Participant Information Form
 
-A small, dependency-free form that collects the required information for five team members in one submission.
+A small, dependency-free form that collects one participant’s required information per submission. Share the same link with five people; each person completes and submits the form separately, and every result is emailed to the configured receiving inbox.
 
 ## Collected fields
 
-For each of the five people:
+For each participant:
 
 - First name
 - Last name
