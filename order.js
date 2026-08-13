@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-zh-copy-2";
+const BUILD_VERSION = "20260813-zh-tw-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const QUOTES_URL = `data/order-quotes.json?v=${BUILD_VERSION}`;
 const ORDER_KEY = "cocktail-atlas-order-v1";
@@ -97,7 +97,7 @@ function ingredientSummary(recipe) {
 }
 
 function localizedField(field) {
-  if (L.current === "zh-Hant") return field.zhHant;
+  if (L.current === "zh-TW") return field.zhHant;
   if (L.current === "zh-Hans") return field.zhHans;
   return field.en;
 }
@@ -107,18 +107,18 @@ function quoteHtml(recipe) {
   if (!entry) return "";
   const { quote, basis } = entry;
   const chineseOriginal = quote.language.startsWith("zh");
-  const original = chineseOriginal ? (L.current === "zh-Hant" ? quote.translation.zhHant : quote.translation.zhHans) : quote.original;
+  const original = chineseOriginal ? (L.current === "zh-TW" ? quote.translation.zhHant : quote.translation.zhHans) : quote.original;
   const translation = chineseOriginal
     ? (L.current === "en" ? quote.translation.en : "")
-    : (L.current === "zh-Hant" ? quote.translation.zhHant : quote.translation.zhHans);
-  const translationLang = chineseOriginal ? "en" : (L.current === "zh-Hant" ? "zh-Hant" : "zh-CN");
+    : (L.current === "zh-TW" ? quote.translation.zhHant : quote.translation.zhHans);
+  const translationLang = chineseOriginal ? "en" : (L.current === "zh-TW" ? "zh-TW" : "zh-CN");
   const author = localizedField(quote.attribution.author);
   const work = localizedField(quote.attribution.work);
   const rationale = localizedField(basis.rationale);
   return `
     <figure class="drink-poem${chineseOriginal ? " is-chinese" : " is-foreign"}" data-quote-id="${quote.id}" data-poem-id="${recipe.id}" title="${escapeHtml(rationale)}">
       <blockquote class="poem-original" lang="${chineseOriginal ? L.languageTag : quote.language}">${escapeHtml(original).replaceAll(" / ", "<br>")}</blockquote>
-      ${translation ? `<p class="poem-translation" lang="${translationLang}" data-label="${L.current === "zh-Hant" ? "譯 · " : "译 · "}">${escapeHtml(translation)}</p>` : ""}
+      ${translation ? `<p class="poem-translation" lang="${translationLang}" data-label="${L.current === "zh-TW" ? "譯 · " : "译 · "}">${escapeHtml(translation)}</p>` : ""}
       <figcaption><span>${escapeHtml(author)} · <cite>${escapeHtml(work)}</cite></span><a href="${escapeHtml(quote.attribution.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(`${L.t("order.quoteSource")}: ${author}, ${work}`)}">${L.t("order.quoteSource")} ↗</a></figcaption>
     </figure>`;
 }
@@ -445,7 +445,7 @@ async function loadData() {
     state.quotes = new Map(quotePayload.assignments.map((assignment) => [assignment.id, { quote: quoteLibrary.get(assignment.quoteId), basis: assignment.basis }]));
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
-      search: normalizeSearch([recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.iba || "", ...recipe.ingredients.flatMap((item) => [item.name, T.ingredient(item.name), L.toTraditional(T.ingredient(item.name))])].join(" ")),
+      search: normalizeSearch([recipe.name, recipe.nameZh || "", L.toTaiwan(recipe.nameZh || ""), recipe.category, recipe.iba || "", ...recipe.ingredients.flatMap((item) => [item.name, T.ingredient(item.name), L.toTaiwan(T.ingredient(item.name))])].join(" ")),
     }));
     els.loading.hidden = true;
     loadSavedOrder();

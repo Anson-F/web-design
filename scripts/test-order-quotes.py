@@ -75,6 +75,19 @@ assert origin_counts["china"] == payload["meta"]["originAudit"]["chinaRecipeCoun
 assert origin_counts["international"] == payload["meta"]["originAudit"]["internationalRecipeCount"]
 
 traditional = json.loads((ROOT / "data" / "zh-hant.json").read_text())
+assert traditional["locale"] == "zh-TW"
 assert set(traditional["recipes"]) == recipe_ids
+by_name = {recipe["name"]: recipe for recipe in recipes}
+traditional_by_english_name = {name: traditional["recipes"][recipe["id"]] for name, recipe in by_name.items()}
+assert traditional_by_english_name["Mojito"]["name"] == "莫希托"
+assert traditional_by_english_name["Daiquiri"]["name"] == "黛綺莉"
+assert traditional_by_english_name["Gin Tonic"]["name"] == "琴通寧"
+assert "琴酒" in traditional_by_english_name["Gin Tonic"]["instruction"]
+assert "通寧水" in traditional_by_english_name["Gin Tonic"]["instruction"]
+assert "萊姆" in traditional_by_english_name["Mojito"]["instruction"]
+
+chinese_quotes = [quote for quote in quotes if quote["language"].startswith("zh")]
+assert all(quote["translation"]["zhHant"] == quote["original"] for quote in chinese_quotes)
+assert all("外國酒只使用外國詩" in assignment["basis"]["rationale"]["zhHant"] for assignment in assignments)
 
 print(f"QUOTE CHECK PASSED · {len(quotes)} verified public-domain excerpts · {origin_counts['china']} Chinese / {origin_counts['international']} international drink matches · {len(languages)} source languages")

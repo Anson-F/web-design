@@ -225,21 +225,56 @@
     },
   };
 
-  const traditional = window.CocktailTraditional?.convert || ((value) => String(value ?? ""));
+  const taiwan = window.CocktailTaiwan?.convert || window.CocktailTraditional?.convert || ((value) => String(value ?? ""));
+  const taiwanOverrides = {
+    "common.recipes": "酒譜",
+    "index.metaDescription": "可搜尋、可篩選並標明來源的中英文雞尾酒酒譜與調製方法檔案。",
+    "index.heroEyebrow": "開放酒譜檔案",
+    "index.heroIntro": "從經典 Martini 到無酒精混合飲品：依酒名、材料、基酒與技法搜尋，酒譜、杯型和步驟一次看清。",
+    "index.recipeCount": "目前收錄",
+    "index.ingredientCount": "材料索引",
+    "index.catalogTitle": "酒譜目錄",
+    "index.catalogIntro": "輸入酒名或材料，也可以從基酒、技法與 IBA 標記開始縮小範圍。",
+    "index.searchLabel": "搜尋酒名 / 材料",
+    "index.searchPlaceholder": "例如：莫希托、Mojito、琴酒",
+    "index.methodShake": "搖盪 Shake",
+    "index.methodStir": "攪拌 Stir",
+    "index.methodBuild": "直調 Build",
+    "index.methodBlend": "電動攪拌 Blend",
+    "index.methodLayer": "分層 Layer",
+    "index.methodMuddle": "搗壓 Muddle",
+    "index.loading": "正在裝訂酒譜檔案…",
+    "index.emptyCopy": "換一個酒名或材料，或清除篩選後再試一次。",
+    "index.shakeTitle": "搖盪",
+    "index.shakeCopy": "含柑橘、蛋白或糖漿時，加冰快速搖盪，讓材料降溫、稀釋並帶入空氣。",
+    "index.stirCopy": "以烈酒為主的透明酒體，加冰輕柔攪拌，維持清澈與滑順口感。",
+    "index.buildCopy": "依序將材料與冰塊直接加入成品杯，適合 Highball 與簡單長飲。",
+    "index.sourceCopy": "目前目錄由 TheCocktailDB 公開 API 可讀取的 A–Z / 0–9 索引產生，並保留材料、份量、杯型、調製說明與更新日期。標有 IBA 的酒譜，可再前往國際調酒師協會官方清單核對。",
+    "index.caution": "<b>飲酒過量，有害健康。</b>酒譜僅供調製參考，不構成健康建議；未滿十八歲請勿飲酒。群眾協作資料可能有地區版本差異，請依個人狀況與當地法規斟酌。",
+    "order.metaDescription": "不顯示價格的中英文雞尾酒點單介面：選擇酒款、杯數與備註，再產生可複製的點單紙。",
+    "order.heroIntro": "從完整酒譜中選酒、調整杯數，再留一段給調酒師的備註；只記下你真正想喝的。",
+    "order.menuIntro": "每杯都裝訂成一張可左右滑動的酒卡：海報、酒名、真實詩句、出處與材料都在同一張紙上。點一下「加入」就增加一杯。",
+    "order.searchLabel": "搜尋酒名 / 材料",
+    "order.searchPlaceholder": "例如：內格羅尼、Negroni、蘭姆酒",
+    "order.noteHelp": "例如：少甜、不加裝飾，其中一杯改成無酒精。",
+    "order.localNote": "點單在此頁面產生；確認後可複製單據交給調酒師。",
+  };
   dictionaries["zh-Hans"] = dictionaries.zh;
-  dictionaries["zh-Hant"] = new Proxy(dictionaries.zh, {
+  dictionaries["zh-TW"] = new Proxy(dictionaries.zh, {
     get(dictionary, key) {
-      const value = dictionary[key];
-      return typeof value === "string" ? traditional(value) : value;
+      const value = taiwanOverrides[key] ?? dictionary[key];
+      return typeof value === "string" ? taiwan(value) : value;
     },
   });
   delete dictionaries.zh;
 
   const savedLocale = localStorage.getItem(STORAGE_KEY);
-  let current = savedLocale === "en" || savedLocale === "zh-Hant" ? savedLocale : "zh-Hans";
+  const normalizedSavedLocale = savedLocale === "zh-Hant" ? "zh-TW" : savedLocale;
+  if (savedLocale === "zh-Hant") localStorage.setItem(STORAGE_KEY, "zh-TW");
+  let current = normalizedSavedLocale === "en" || normalizedSavedLocale === "zh-TW" ? normalizedSavedLocale : "zh-Hans";
 
   const isChinese = () => current.startsWith("zh");
-  const localizeChinese = (value) => current === "zh-Hant" ? traditional(value) : String(value ?? "");
+  const localizeChinese = (value) => current === "zh-TW" ? taiwan(value) : String(value ?? "");
 
   function interpolate(value, variables = {}) {
     return Object.entries(variables).reduce((text, [key, replacement]) => text.replaceAll(`{${key}}`, replacement), value);
@@ -251,7 +286,7 @@
   }
 
   function translate(root = document) {
-    document.documentElement.lang = current === "zh-Hans" ? "zh-CN" : current === "zh-Hant" ? "zh-Hant" : "en";
+    document.documentElement.lang = current === "zh-Hans" ? "zh-CN" : current === "zh-TW" ? "zh-TW" : "en";
     root.querySelectorAll("[data-i18n]").forEach((element) => { element.textContent = t(element.dataset.i18n); });
     root.querySelectorAll("[data-i18n-html]").forEach((element) => { element.innerHTML = t(element.dataset.i18nHtml); });
     root.querySelectorAll("[data-i18n-placeholder]").forEach((element) => { element.placeholder = t(element.dataset.i18nPlaceholder); });
@@ -284,10 +319,11 @@
     setLocale,
     pick(zh, en) { return isChinese() ? localizeChinese(zh) : en; },
     zh: localizeChinese,
-    toTraditional: traditional,
+    toTaiwan: taiwan,
+    toTraditional: taiwan,
     get isChinese() { return isChinese(); },
-    get isTraditional() { return current === "zh-Hant"; },
-    get languageTag() { return current === "zh-Hans" ? "zh-CN" : current === "zh-Hant" ? "zh-Hant" : "en"; },
+    get isTraditional() { return current === "zh-TW"; },
+    get languageTag() { return current === "zh-Hans" ? "zh-CN" : current === "zh-TW" ? "zh-TW" : "en"; },
     get current() { return current; },
   };
 
