@@ -32,10 +32,12 @@ for mainland_or_literal_term in (
 expected_names = {
     "Mojito": "莫希托",
     "Daiquiri": "黛綺莉",
+    "Caipirinha": "凱匹林納",
     "Gin Tonic": "琴通寧",
     "Gin Fizz": "琴費士",
     "Tom Collins": "湯姆可林斯",
     "Dry Martini": "乾馬丁尼",
+    "Sidecar": "側車",
 }
 for english_name, taiwan_name in expected_names.items():
     assert by_english_name[english_name]["name"] == taiwan_name
@@ -47,6 +49,8 @@ assert "通寧水" in by_english_name["Gin Tonic"]["instruction"]
 assert "雪克杯" in by_english_name["Daiquiri"]["instruction"]
 assert "可林杯" in by_english_name["Tom Collins"]["instruction"]
 assert "shot 杯" in by_english_name["110 in the shade"]["instruction"]
+assert "吧匙" in by_english_name["Pure Passion"]["instruction"]
+assert "可食用花朵" in by_english_name["Pure Passion"]["instruction"]
 
 runtime = (ROOT / "traditional-map.js").read_text()
 locale = (ROOT / "locale.js").read_text()

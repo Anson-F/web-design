@@ -25,6 +25,9 @@ copy = "\n".join(f"{recipe['nameZh']}\n{recipe['instructions']['zh']}" for recip
 for forbidden in (
     "射手", "射击", "每人一枪", "老式玻璃杯", "岩石玻璃杯", "岩石杯",
     "滋补品", "楔形物", "玻璃搅拌器", "鸡尾酒调酒器", "糖醋", "喝醉",
+    "打开电晕", "加入休息", "划分眼镜", "饮用面粉", "醒过的薄荷",
+    "拍一张足够大的照片", "核弹 1-2 分钟", "燕麦糖浆", "咖啡豆和 151",
+    "卡查卡", "7杯", "发烧树", "古柯粉", "甘露酒", "香波堡", "野生火鸡",
 ):
     assert forbidden not in copy, f"Literal translation leaked into Chinese copy: {forbidden}"
 
@@ -36,12 +39,24 @@ assert by_name["Gin Cooler"]["nameZh"] == "金酒酷乐"
 assert by_name["Spritz"]["nameZh"] == "斯普里兹"
 assert by_name["Wine Cooler"]["nameZh"] == "葡萄酒酷乐"
 assert by_name["Jello shots"]["nameZh"] == "果冻 shot"
+assert by_name["Irish Russian"]["nameZh"] == "爱尔兰俄罗斯"
+assert by_name["Kentucky B And B"]["nameZh"] == "肯塔基 B&B"
+assert by_name["Rum Cobbler"]["nameZh"] == "朗姆柯布勒"
+assert by_name["Vodka Slime"]["nameZh"] == "Vodka Slime"
+assert "樱桃汁" in by_name["Halloween Punch"]["instructions"]["zh"]
+assert "杏仁糖浆" in by_name["Mauresque"]["instructions"]["zh"]
+assert "Frangelico 榛果利口酒" in by_name["Royal Bitch"]["instructions"]["zh"]
+assert "可食用花朵" in by_name["Pure Passion"]["instructions"]["zh"]
+assert "151 proof 朗姆酒" in by_name["Downshift"]["instructions"]["zh"]
+assert "shot 杯" in by_name["Freddy Kruger"]["instructions"]["zh"]
 
 for token in ('"gin": "金酒"', '"tonic water": "汤力水"', '"lime": "青柠"'):
     assert token in terms_script
+assert '"frangelico": "Frangelico 榛果利口酒"' in terms_script
+assert '"half-and-half": "Half-and-half 稀奶油"' in terms_script
 assert re.search(r'\[/\\bshots\?\\b/gi, "shot"\]', terms_script)
 
-version = "20260813-title-up-1"
+version = "20260813-translation-audit-1"
 assert f'recipes.json?v=${{BUILD_VERSION}}' in app_script
 assert f'recipes.json?v=${{BUILD_VERSION}}' in order_script
 assert all(f"?v={version}" in source for source in (index_html, order_html))

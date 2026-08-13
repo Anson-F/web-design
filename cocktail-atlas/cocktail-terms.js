@@ -38,7 +38,7 @@ window.CocktailTerms = (() => {
     "black sambuca": "黑色桑布卡",
     "blackberries": "黑莓",
     "blackberry brandy": "黑莓白兰地",
-    "blackcurrant cordial": "黑加仑果露",
+    "blackcurrant cordial": "黑加仑糖浆",
     "blackstrap rum": "黑糖蜜朗姆酒",
     "blended scotch": "调和苏格兰威士忌",
     "blended whiskey": "调和威士忌",
@@ -90,12 +90,12 @@ window.CocktailTerms = (() => {
     "cranberry juice": "蔓越莓汁",
     "cranberry vodka": "蔓越莓伏特加",
     "cream": "淡奶油",
-    "cream of coconut": "椰浆",
+    "cream of coconut": "椰子奶油",
     "creme de banane": "香蕉利口酒",
     "creme de cacao": "可可利口酒",
     "creme de cassis": "黑加仑利口酒",
     "creme de mure": "黑莓利口酒",
-    "crown royal": "皇冠威士忌",
+    "crown royal": "Crown Royal 加拿大威士忌",
     "cucumber": "黄瓜",
     "cumin seed": "孜然籽",
     "daiquiri mix": "代基里预调液",
@@ -109,13 +109,13 @@ window.CocktailTerms = (() => {
     "egg": "鸡蛋",
     "egg white": "蛋清",
     "egg yolk": "蛋黄",
-    "elderflower cordial": "接骨木花果露",
+    "elderflower cordial": "接骨木花糖浆",
     "espresso": "浓缩咖啡",
     "everclear": "Everclear 谷物烈酒",
-    "falernum": "法勒南风味糖浆",
+    "falernum": "法勒南糖浆",
     "figs": "无花果",
     "firewater": "高浓度烈酒",
-    "frangelico": "芳津杏仁利口酒",
+    "frangelico": "Frangelico 榛果利口酒",
     "fresca": "Fresca 柚子汽水",
     "fresh lemon juice": "鲜榨柠檬汁",
     "fresh lime juice": "鲜榨青柠汁",
@@ -140,8 +140,8 @@ window.CocktailTerms = (() => {
     "green creme de menthe": "绿色薄荷利口酒",
     "grenadine": "红石榴糖浆",
     "guinness stout": "健力士黑啤",
-    "half-and-half": "半奶油半牛奶",
-    "heavy cream": "浓奶油",
+    "half-and-half": "Half-and-half 稀奶油",
+    "heavy cream": "淡奶油",
     "honey": "蜂蜜",
     "honey syrup": "蜂蜜糖浆",
     "hot chocolate": "热巧克力",
@@ -169,7 +169,7 @@ window.CocktailTerms = (() => {
     "lemon peel": "柠檬皮",
     "lemon-lime soda": "柠檬青柠汽水",
     "lemonade": "柠檬汽水",
-    "light cream": "淡奶油",
+    "light cream": "稀奶油",
     "light rum": "白朗姆酒",
     "lillet": "利莱开胃酒",
     "lillet blanc": "白利莱",
@@ -302,6 +302,26 @@ window.CocktailTerms = (() => {
     "zima": "Zima 麦芽汽水",
   };
 
+  // Keep units such as oz/cl/ml and bar-native words such as shot/dash, while
+  // localizing prose that TheCocktailDB stores in the quantity field. Ordered
+  // phrases run before individual words so “Fill to top with” stays coherent.
+  const measurePhrases = [
+    [/\bfill to top with\b/gi, "补至满杯"],
+    [/\bfill with\b/gi, "加满"],
+    [/\btop up with\b/gi, "补满"],
+    [/\bgarnish with\b/gi, "装饰用"],
+    [/\bjuice of\b/gi, "榨汁"],
+    [/\btwist of\b/gi, "一卷"],
+    [/\baround rim put\b/gi, "杯口蘸"],
+    [/\bfloat bacardi\b/gi, "漂浮少量 Bacardí"],
+    [/\btop\b/gi, "补满"],
+    [/\bgarnish\b/gi, "装饰用"],
+    [/\bfill\b/gi, "加满"],
+    [/\badd\b/gi, "加入"],
+    [/\babout\b/gi, "约"],
+    [/\bto taste\b/gi, "适量"],
+  ];
+
   const measures = [
     [/\bshots?\b/gi, "shot"],
     [/\bparts?\b/gi, "份"],
@@ -312,6 +332,42 @@ window.CocktailTerms = (() => {
     [/\bwedges?\b/gi, "角"],
     [/\bsprigs?\b/gi, "枝"],
     [/\bdashes?\b/gi, "dash"],
+    [/\bdrops?\b/gi, "滴"],
+    [/\bsplashes?\b/gi, "少量"],
+    [/\bbottles?\b/gi, "瓶"],
+    [/\bcans?\b/gi, "罐"],
+    [/\bcubes?\b/gi, "块"],
+    [/\bchunks?\b/gi, "块"],
+    [/\bpieces?\b/gi, "块"],
+    [/\bpinches?\b/gi, "少许"],
+    [/\bscoops?\b/gi, "勺"],
+    [/\bsticks?\b/gi, "根"],
+    [/\bstrips?\b/gi, "条"],
+    [/\bglasses?\b/gi, "杯"],
+    [/\bpints?\b/gi, "品脱"],
+    [/\bquarts?\b|\bqt\b/gi, "夸脱"],
+    [/\bgallons?\b|\bgal\b/gi, "加仑"],
+    [/\bfifths?\b/gi, "五分之一加仑瓶"],
+    [/\binches?\b/gi, "in"],
+    [/\bwhole\b/gi, "整颗"],
+    [/\blarge\b/gi, "大"],
+    [/\bsmall\b/gi, "小"],
+    [/\bfresh\b/gi, "新鲜"],
+    [/\bchilled\b/gi, "冰镇"],
+    [/\bcold\b/gi, "冷"],
+    [/\bhot\b/gi, "热"],
+    [/\bboiling\b/gi, "沸腾"],
+    [/\bfrozen\b/gi, "冷冻"],
+    [/\bcrushed\b/gi, "碎"],
+    [/\bground\b/gi, "研磨"],
+    [/\bchopped\b/gi, "切碎"],
+    [/\bdried\b/gi, "干燥"],
+    [/\binstant\b/gi, "速溶"],
+    [/\bskimmed\b/gi, "脱脂"],
+    [/\bsweetened\b/gi, "加糖"],
+    [/\bunsweetened\b/gi, "无糖"],
+    [/\bsuperfine\b/gi, "细砂"],
+    [/\bstrong\b/gi, "浓"],
   ];
 
   function ingredient(name = "") {
@@ -319,7 +375,14 @@ window.CocktailTerms = (() => {
   }
 
   function measure(value = "") {
-    return measures.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), String(value).trim());
+    const phrasesLocalized = measurePhrases.reduce(
+      (result, [pattern, replacement]) => result.replace(pattern, replacement),
+      String(value).trim(),
+    );
+    return measures
+      .reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), phrasesLocalized)
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   return { ingredient, measure };

@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-title-up-1";
+const BUILD_VERSION = "20260813-translation-audit-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
