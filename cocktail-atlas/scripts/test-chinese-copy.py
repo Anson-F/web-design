@@ -13,6 +13,10 @@ payload = json.loads((ROOT / "data" / "recipes.json").read_text())
 recipes = payload["recipes"]
 instructions = json.loads((ROOT / "data" / "instruction-zh.json").read_text())
 terms_script = (ROOT / "cocktail-terms.js").read_text()
+app_script = (ROOT / "app.js").read_text()
+order_script = (ROOT / "order.js").read_text()
+index_html = (ROOT / "index.html").read_text()
+order_html = (ROOT / "order.html").read_text()
 
 assert len(recipes) == len(instructions) == 441
 assert all(recipe["instructions"]["zh"] == instructions[recipe["id"]] for recipe in recipes)
@@ -37,4 +41,13 @@ for token in ('"gin": "金酒"', '"tonic water": "汤力水"', '"lime": "青柠"
     assert token in terms_script
 assert re.search(r'\[/\\bshots\?\\b/gi, "shot"\]', terms_script)
 
-print("PASS: 441 contemporary Chinese instructions, protected shot terminology, and curated bar vocabulary")
+version = "20260813-zh-copy-2"
+assert f'recipes.json?v=${{BUILD_VERSION}}' in app_script
+assert f'recipes.json?v=${{BUILD_VERSION}}' in order_script
+assert all(f"?v={version}" in source for source in (index_html, order_html))
+for asset in ("styles.css", "traditional-map.js", "locale.js", "cocktail-terms.js", "app.js"):
+    assert f'{asset}?v={version}' in index_html
+for asset in ("styles.css", "order.css", "traditional-map.js", "locale.js", "cocktail-terms.js", "order.js"):
+    assert f'{asset}?v={version}' in order_html
+
+print("PASS: 441 contemporary Chinese instructions, protected shot terminology, curated bar vocabulary, and cache-busted assets")

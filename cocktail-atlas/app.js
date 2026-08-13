@@ -1,4 +1,5 @@
-const DATA_URL = "data/recipes.json";
+const BUILD_VERSION = "20260813-zh-copy-2";
+const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
 const T = window.CocktailTerms;
