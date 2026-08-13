@@ -64,6 +64,14 @@ function displayName(recipe) {
   return L.current === "zh" ? (recipe.nameZh || recipe.name) : recipe.name;
 }
 
+function posterAlt(recipe) {
+  return pick(`${recipe.nameZh || recipe.name} / ${recipe.name} 调酒海报`, `Minimal zine poster for ${recipe.name}`);
+}
+
+function posterImage(recipe) {
+  return `<img class="cocktail-poster-image" src="assets/posters/${recipe.id}.jpg" alt="${escapeHtml(posterAlt(recipe))}" width="720" height="1200" loading="lazy" decoding="async">`;
+}
+
 function normalizeSearch(value) {
   return value.toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -111,6 +119,7 @@ function menuItem(recipe) {
   return `
     <article class="order-menu-item">
       <div class="order-menu-item-inner">
+        <span class="order-menu-poster">${posterImage(recipe)}</span>
         <div class="order-menu-copy">
           <span>${escapeHtml(localLabel(baseLabels, recipe.base))} · ${escapeHtml(localLabel(methodLabels, recipe.method))} · ${escapeHtml(flag)}</span>
           <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
@@ -139,6 +148,7 @@ function renderMenu() {
 function selectedItem(recipe, quantity) {
   return `
     <article class="selected-drink">
+      <span class="selected-poster">${posterImage(recipe)}</span>
       <div>
         <h3>${nameHtml(recipe)}</h3>
         <p>${escapeHtml(localLabel(baseLabels, recipe.base))} · ${escapeHtml(localLabel(methodLabels, recipe.method))}</p>
@@ -376,6 +386,12 @@ document.querySelector(".theme-label").textContent = document.documentElement.da
 
 bindEvents();
 loadData();
+
+document.addEventListener("error", (event) => {
+  if (!event.target.matches?.(".cocktail-poster-image")) return;
+  event.target.closest(".order-menu-poster, .selected-poster")?.classList.add("is-missing");
+  event.target.hidden = true;
+}, true);
 
 window.addEventListener("cocktail-locale-change", () => {
   const dark = document.documentElement.dataset.theme === "dark";
