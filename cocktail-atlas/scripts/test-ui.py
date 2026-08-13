@@ -66,6 +66,14 @@ with sync_playwright() as playwright:
     page.goto(BASE_URL, wait_until="networkidle")
     expect(page.locator("#results-status")).to_contain_text("找到 441 款配方")
     expect(page.locator(".recipe-card")).to_have_count(30)
+    first_card = page.locator(".recipe-card").first
+    card_box = first_card.bounding_box()
+    title_box = first_card.locator("h3").bounding_box()
+    meta_box = first_card.locator(".recipe-meta").bounding_box()
+    assert card_box and title_box and meta_box
+    assert title_box["y"] < card_box["y"] + card_box["height"] * .35, (card_box, title_box)
+    assert meta_box["y"] > card_box["y"] + card_box["height"] * .65, (card_box, meta_box)
+    first_card.screenshot(path=str(SCREENSHOT_DIR / "title-up-desktop.png"))
     assert_no_horizontal_overflow(page)
     page.screenshot(path=str(SCREENSHOT_DIR / "desktop.png"), full_page=True)
     desktop.close()

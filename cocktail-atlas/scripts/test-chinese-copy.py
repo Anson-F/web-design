@@ -41,7 +41,7 @@ for token in ('"gin": "金酒"', '"tonic water": "汤力水"', '"lime": "青柠"
     assert token in terms_script
 assert re.search(r'\[/\\bshots\?\\b/gi, "shot"\]', terms_script)
 
-version = "20260813-pre-formula-restore-1"
+version = "20260813-title-up-1"
 assert f'recipes.json?v=${{BUILD_VERSION}}' in app_script
 assert f'recipes.json?v=${{BUILD_VERSION}}' in order_script
 assert all(f"?v={version}" in source for source in (index_html, order_html))
