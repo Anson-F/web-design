@@ -8,18 +8,19 @@ import json
 from datetime import date
 from pathlib import Path
 
-from opencc import OpenCC
-
-
 ROOT = Path(__file__).resolve().parents[1]
 RECIPES_PATH = ROOT / "data" / "recipes.json"
 OUTPUT_PATH = ROOT / "data" / "order-quotes.json"
-TO_TRADITIONAL = OpenCC("s2t")
+
+from opencc import OpenCC
+
+from taiwan_localization import to_taiwan
+
 TO_SIMPLIFIED = OpenCC("t2s")
 
 
 def local_text(zh: str, en: str) -> dict[str, str]:
-    return {"zhHans": TO_SIMPLIFIED.convert(zh), "zhHant": TO_TRADITIONAL.convert(zh), "en": en}
+    return {"zhHans": TO_SIMPLIFIED.convert(zh), "zhHant": to_taiwan(zh), "en": en}
 
 
 def quote(
@@ -40,7 +41,9 @@ def quote(
     translations = local_text(zh, en)
     if language.startswith("zh"):
         translations["zhHans"] = TO_SIMPLIFIED.convert(original)
-        translations["zhHant"] = TO_TRADITIONAL.convert(original)
+        # A cited Chinese poem is a primary-source text, not interface copy.
+        # Preserve its exact traditional original rather than localizing it.
+        translations["zhHant"] = original
     return {
         "id": quote_id,
         "language": language,

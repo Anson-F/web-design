@@ -15,7 +15,7 @@ with sync_playwright() as playwright:
 
     for locale, query, recipe_id, filename in [
         ("zh-Hans", "Mojito", "11000", "mojito-simplified.png"),
-        ("zh-Hant", "Mojito", "11000", "mojito-traditional.png"),
+        ("zh-TW", "Mojito", "11000", "mojito-traditional.png"),
         ("en", "Negroni", "11003", "negroni-english.png"),
     ]:
         page.locator(f'[data-lang="{locale}"]').click()

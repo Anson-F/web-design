@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-zh-copy-2";
+const BUILD_VERSION = "20260813-zh-tw-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
@@ -317,9 +317,9 @@ async function loadData() {
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
       search: normalizeSearch([
-        recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.glass, recipe.iba || "",
+        recipe.name, recipe.nameZh || "", L.toTaiwan(recipe.nameZh || ""), recipe.category, recipe.glass, recipe.iba || "",
         recipe.instructions.zh || "", recipe.instructions.en || "",
-        ...recipe.ingredients.flatMap((item) => [item.name, T.ingredient(item.name), L.toTraditional(T.ingredient(item.name))]),
+        ...recipe.ingredients.flatMap((item) => [item.name, T.ingredient(item.name), L.toTaiwan(T.ingredient(item.name))]),
       ].join(" ")),
     }));
     const numberLocale = L.isChinese ? L.languageTag : "en-US";

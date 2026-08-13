@@ -1,10 +1,12 @@
 # 酒谱 · Cocktail Atlas
 
-一个可直接发布在 GitHub Pages 的静态鸡尾酒配方档案。界面支持简体中文、繁體中文和英文，可按酒名、原料、基酒、IBA 标记与调制技法检索。
+一个可直接发布在 GitHub Pages 的静态鸡尾酒配方档案。界面支持简体中文、台湾繁中和英文，可按酒名、原料、基酒、IBA 标记与调制技法检索。
 
-网站支持简体中文、繁體中文与英文切换，并在浏览器中记忆语言偏好。中文模式将中文酒名作为主标题、英文原名作为小号副标题；英文模式仅显示英文酒名。`data/name-zh.json` 保存中文酒名映射，`data/instruction-zh.json` 保存经校订的简体中文步骤，`data/zh-hant.json` 保存 441 款酒名与步骤的繁体版本。
+网站支持简体中文、台湾繁中（`zh-TW`）与英文切换，并在浏览器中记忆语言偏好。中文模式将中文酒名作为主标题、英文原名作为小号副标题；英文模式仅显示英文酒名。`data/name-zh.json` 保存简体中文酒名映射，`data/instruction-zh.json` 保存经校订的简体中文步骤，`data/zh-hant.json` 保存 441 款酒名与步骤的台湾繁中版本。
 
 中文配方使用当代中文酒吧语境，不采用逐词机翻：`shot` 保留英文，`shot glass` 写作“shot 杯”，`shaker` 写作“摇酒壶”，`rocks / old fashioned glass` 写作“古典杯”，`gin`、`tonic`、`lime` 分别使用“金酒”“汤力水”“青柠”。原料与用量的界面译名集中在 `cocktail-terms.js`，便于持续审校并保证详情、搜索、复制配方和点单卡片用词一致。
+
+台湾繁中不是简体版本的逐字转码，而是独立的地区本地化层。酒名与材料采用台湾酒吧常用的「莫希托」「黛綺莉」「琴酒」「蘭姆酒」「萊姆」「通寧水」，酒具与技法采用「雪克杯」「吧叉匙」「可林杯」「搖盪」等用语，界面使用「搜尋」「資料」「儲存」等台湾产品语汇。共用规则在 `scripts/taiwan_localization.py`，会同时生成浏览器运行时词组表和 `data/zh-hant.json`；引文中的古典中文原诗不经过地区化转换，保持来源原文。
 
 `order.html` 提供不含金额和付款环节的纯点单界面：选择酒款、调整数量、填写可选备注并生成可复制的点单纸。当前选择保存在浏览器本机。
 
@@ -65,6 +67,7 @@ python3 cocktail-atlas/scripts/test-posters.py
 python3 cocktail-atlas/scripts/test-ui.py
 python3 cocktail-atlas/scripts/test-localization.py
 python3 cocktail-atlas/scripts/test-chinese-copy.py
+python3 cocktail-atlas/scripts/test-taiwan-localization.py
 python3 cocktail-atlas/scripts/test-order.py
 python3 cocktail-atlas/scripts/test-order-quotes.py
 ```
