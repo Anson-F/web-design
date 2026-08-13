@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Submit contact and academic information for five team members.">
+  <meta name="theme-color" content="#f4f4f0">
+  <title>Team Information Form</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-inner">
+      <p class="eyebrow">Team registration</p>
+      <h1>Team information</h1>
+      <p class="intro">Enter the required information for all five team members, then submit the form once.</p>
+      <div class="progress" aria-live="polite">
+        <span id="progress-label">0 of 5 people complete</span>
+        <div class="progress-track" aria-hidden="true">
+          <span id="progress-bar"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <form id="team-form" novalidate>
+      <input class="honeypot" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div id="form-alert" class="form-alert" role="alert" tabindex="-1" hidden></div>
+
+      <div id="people-fields" class="people-fields"></div>
+
+      <section class="submit-panel" aria-labelledby="submit-title">
+        <div>
+          <p class="section-number">Final step</p>
+          <h2 id="submit-title">Review and submit</h2>
+          <p>Please check each person’s details. Required fields are marked with an asterisk.</p>
+        </div>
+        <button id="submit-button" type="submit">
+          <span class="button-label">Submit team information</span>
+          <span class="button-loading" aria-hidden="true">Submitting…</span>
+        </button>
+        <p class="privacy-note">Your information is sent to the organizer’s private form inbox. It is not saved in this GitHub website.</p>
+      </section>
+    </form>
+  </main>
+
+  <template id="person-template">
+    <fieldset class="person-card">
+      <legend>
+        <span class="person-kicker">Person <span data-person-number></span></span>
+        <span class="person-title">Team member <span data-person-number></span></span>
+        <span class="person-status" data-person-status>Incomplete</span>
+      </legend>
+
+      <div class="field-grid">
+        <div class="field">
+          <label data-for="first_name">First name <span aria-hidden="true">*</span></label>
+          <input data-field="first_name" type="text" autocomplete="given-name" required>
+          <p class="error" data-error-for="first_name"></p>
+        </div>
+
+        <div class="field">
+          <label data-for="last_name">Last name <span aria-hidden="true">*</span></label>
+          <input data-field="last_name" type="text" autocomplete="family-name" required>
+          <p class="error" data-error-for="last_name"></p>
+        </div>
+
+        <div class="field">
+          <label data-for="university_email">University email (.edu) <span aria-hidden="true">*</span></label>
+          <input data-field="university_email" type="email" inputmode="email" autocomplete="email" placeholder="name@university.edu" required>
+          <p class="hint">Use an email address ending in .edu.</p>
+          <p class="error" data-error-for="university_email"></p>
+        </div>
+
+        <div class="field">
+          <label data-for="phone">Phone <span aria-hidden="true">*</span></label>
+          <input data-field="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-0123" required>
+          <p class="error" data-error-for="phone"></p>
+        </div>
+
+        <div class="field">
+          <label data-for="university">University <span aria-hidden="true">*</span></label>
+          <input data-field="university" type="text" autocomplete="organization" placeholder="University name" required>
+          <p class="error" data-error-for="university"></p>
+        </div>
+
+        <div class="field">
+          <label data-for="academic_level">Academic level <span aria-hidden="true">*</span></label>
+          <select data-field="academic_level" required>
+            <option value="">Select</option>
+            <option value="Undergraduate">Undergraduate</option>
+            <option value="Master's student">Master’s student</option>
+            <option value="Doctoral student">Doctoral student</option>
+            <option value="Postdoctoral researcher">Postdoctoral researcher</option>
+            <option value="Faculty or staff">Faculty or staff</option>
+            <option value="Other">Other</option>
+          </select>
+          <p class="error" data-error-for="academic_level"></p>
+        </div>
+
+        <div class="field field-wide">
+          <label data-for="linkedin">LinkedIn profile <span aria-hidden="true">*</span></label>
+          <input data-field="linkedin" type="url" inputmode="url" autocomplete="url" placeholder="https://www.linkedin.com/in/your-name" required>
+          <p class="error" data-error-for="linkedin"></p>
+        </div>
+
+        <fieldset class="consent field-wide">
+          <legend>Do you want to participate in a brief pre- and post-competition survey? Your identity will remain completely anonymous. <span aria-hidden="true">*</span></legend>
+          <div class="radio-row">
+            <label class="radio-option">
+              <input data-field="survey_consent" type="radio" value="I consent" required>
+              <span>I consent</span>
+            </label>
+            <label class="radio-option">
+              <input data-field="survey_consent" type="radio" value="I do not consent" required>
+              <span>I do not consent</span>
+            </label>
+          </div>
+          <p class="error" data-error-for="survey_consent"></p>
+        </fieldset>
+      </div>
+    </fieldset>
+  </template>
+</body>
+</html>
