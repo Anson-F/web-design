@@ -89,6 +89,7 @@ QUOTES = [
     quote("keats-nightingale-01", "en", "O for a draught of vintage! that hath been / Cool'd a long age in the deep-delvèd earth,", "啊，愿有一口佳酿，在深掘的地底冷藏多年。", "O for a draught of vintage! that hath been / Cool'd a long age in the deep-delvèd earth,", "约翰·济慈", "John Keats", "夜莺颂", "Ode to a Nightingale", "https://en.wikisource.org/wiki/Keats;_poems_published_in_1820/Ode_to_a_Nightingale", "English Wikisource, 1820 text", US_PD, ("whiskey", "brandy", "wine", "coffee")),
     quote("keats-nightingale-02", "en", "With beaded bubbles winking at the brim, / And purple-stained mouth;", "杯沿珠串般的气泡眨着眼，杯口染成紫红。", "With beaded bubbles winking at the brim, / And purple-stained mouth;", "约翰·济慈", "John Keats", "夜莺颂", "Ode to a Nightingale", "https://en.wikisource.org/wiki/Keats;_poems_published_in_1820/Ode_to_a_Nightingale", "English Wikisource, 1820 text", US_PD, ("sparkling", "wine", "berry", "layered")),
     quote("keats-nightingale-03", "en", "Tasting of Flora and the country green, / Dance, and Provençal song, and sunburnt mirth!", "尝来有花神与乡野青绿、舞蹈、普罗旺斯歌声和晒暖的欢欣。", "Tasting of Flora and the country green, / Dance, and Provençal song, and sunburnt mirth!", "约翰·济慈", "John Keats", "夜莺颂", "Ode to a Nightingale", "https://en.wikisource.org/wiki/Keats;_poems_published_in_1820/Ode_to_a_Nightingale", "English Wikisource, 1820 text", US_PD, ("herbal", "gin", "wine", "tropical")),
+    quote("keats-autumn-01", "en", "And fill all fruit with ripeness to the core; / To swell the gourd, and plump the hazel shells", "让一切果实从里到外成熟，让葫芦鼓起，也让榛子的壳饱满。", "And fill all fruit with ripeness to the core; / To swell the gourd, and plump the hazel shells", "约翰·济慈", "John Keats", "秋颂", "To Autumn", "https://en.wikisource.org/wiki/Keats;_poems_published_in_1820/To_Autumn", "English Wikisource, 1820 text", US_PD, ("apple", "brandy", "wine")),
     quote("blake-auguries-01", "en", "To see a World in a Grain of Sand / And a Heaven in a Wild Flower,", "从一粒沙看见世界，从一朵野花看见天堂。", "To see a World in a Grain of Sand / And a Heaven in a Wild Flower,", "威廉·布莱克", "William Blake", "天真的预言", "Auguries of Innocence", "https://en.wikisource.org/wiki/The_Pickering_Manuscript/Auguries_of_Innocence", "English Wikisource, Pickering Manuscript", PRE_1931_PD, ("herbal", "non-alcoholic", "clear", "other")),
     quote("shakespeare-sonnet18-01", "en", "Shall I compare thee to a summer's day? / Thou art more lovely and more temperate:", "我能否把你比作夏日？你却更加可爱，也更加温和。", "Shall I compare thee to a summer's day? / Thou art more lovely and more temperate:", "威廉·莎士比亚", "William Shakespeare", "十四行诗第十八首", "Sonnet 18", "https://en.wikisource.org/wiki/Shakespeare%27s_Sonnets_(1883)/Sonnet_18", "English Wikisource, 1883 edition", PRE_1931_PD, ("tropical", "citrus", "rum", "tequila")),
     quote("shakespeare-sonnet18-02", "en", "Rough winds do shake the darling buds of May, / And summer's lease hath all too short a date;", "狂风摇落五月可爱的花蕾，夏日的期限又实在太短。", "Rough winds do shake the darling buds of May, / And summer's lease hath all too short a date;", "威廉·莎士比亚", "William Shakespeare", "十四行诗第十八首", "Sonnet 18", "https://en.wikisource.org/wiki/Shakespeare%27s_Sonnets_(1883)/Sonnet_18", "English Wikisource, 1883 edition", PRE_1931_PD, ("citrus", "berry", "sparkling")),
@@ -112,6 +113,13 @@ QUOTES = [
     quote("camoes-fields-01", "pt", "Verdes são os campos, / De cor de limão:", "田野青青，是柠檬的颜色。", "Green are the fields, the colour of lemon.", "路易斯·德·卡蒙斯", "Luís de Camões", "田野青青", "Green Are the Fields", "https://pt.wikisource.org/wiki/Verdes_s%C3%A3o_os_campos", "Portuguese Wikisource, 16th-century text", ANCIENT_PD, ("citrus", "herbal", "gin", "tequila")),
     quote("camoes-fire-01", "pt", "Amor he hum fogo que arde sem se ver; / He ferida que doe, e não se sente;", "爱是看不见却燃烧的火，是疼痛却感觉不到的伤。", "Love is a fire that burns unseen; a wound that hurts yet is not felt.", "路易斯·德·卡蒙斯", "Luís de Camões", "爱是看不见的火", "Love Is a Fire That Burns Unseen", "https://pt.wikisource.org/wiki/Amor_he_hum_fogo_que_arde_sem_se_ver", "Portuguese Wikisource, 16th-century text", ANCIENT_PD, ("shot", "spice", "bitter", "rum")),
 ]
+
+
+# The current TheCocktailDB snapshot contains no recipe with documented Chinese
+# origin or a Chinese spirit such as baijiu or huangjiu. Add only evidence-backed
+# recipe IDs here when the source catalog gains one; never infer origin from a
+# translated Chinese display name.
+CHINESE_RECIPE_EVIDENCE: dict[str, dict[str, str]] = {}
 
 
 PROFILE_LABELS = {
@@ -187,38 +195,49 @@ def choose_profile(recipe: dict) -> tuple[str, list[str]]:
     return (base if base in PROFILE_LABELS else "other"), [f"base:{base}", f"method:{recipe.get('method', 'other')}"]
 
 
-def assignment_rationale(profile: str, signals: list[str]) -> dict[str, str]:
+def assignment_rationale(profile: str, signals: list[str], origin_group: str) -> dict[str, str]:
     values = ", ".join(signal.split(":", 1)[1] for signal in signals)
     zh_profile, en_profile = PROFILE_LABELS[profile]
-    zh = f"按配方中的 {values} 归入“{zh_profile}”，并从真实公版诗句中匹配相近意象。"
-    en = f"Matched to a verified public-domain line through {values}, reflecting {en_profile}."
+    origin_zh = "中国酒只使用中国诗" if origin_group == "china" else "外国酒只使用外国诗"
+    origin_en = "Chinese drinks use Chinese verse" if origin_group == "china" else "non-Chinese drinks use non-Chinese verse"
+    zh = f"{origin_zh}；按配方中的 {values} 归入“{zh_profile}”，再匹配相近意象。"
+    en = f"{origin_en}; matched through {values}, reflecting {en_profile}."
     return local_text(zh, en)
 
 
 def main() -> None:
     recipes = json.loads(RECIPES_PATH.read_text())["recipes"]
-    by_profile: dict[str, list[dict]] = {profile: [] for profile in PROFILE_LABELS}
+    by_origin_profile = {
+        origin: {profile: [] for profile in PROFILE_LABELS}
+        for origin in ("china", "international")
+    }
     for item in QUOTES:
+        origin = "china" if item["language"].startswith("zh") else "international"
         for profile in item["profiles"]:
-            by_profile[profile].append(item)
-    missing_profiles = [profile for profile, items in by_profile.items() if not items]
-    if missing_profiles:
-        raise RuntimeError(f"Quote library does not cover profiles: {missing_profiles}")
+            by_origin_profile[origin][profile].append(item)
 
     assignments = []
     for recipe in recipes:
         profile, signals = choose_profile(recipe)
-        candidates = by_profile[profile]
-        seed = int(hashlib.sha256(f"{recipe['id']}:{recipe['name']}:{profile}".encode()).hexdigest()[:12], 16)
+        origin_group = "china" if recipe["id"] in CHINESE_RECIPE_EVIDENCE else "international"
+        candidates = by_origin_profile[origin_group][profile]
+        if not candidates:
+            raise RuntimeError(f"No {origin_group} quotation covers profile {profile} for recipe {recipe['id']}")
+        seed = int(hashlib.sha256(f"{recipe['id']}:{recipe['name']}:{profile}:{origin_group}".encode()).hexdigest()[:12], 16)
         selected = candidates[seed % len(candidates)]
         assignments.append({
             "id": recipe["id"],
             "quoteId": selected["id"],
             "basis": {
                 "type": "verified-public-domain-style-match",
+                "originGroup": origin_group,
+                "originEvidence": CHINESE_RECIPE_EVIDENCE.get(recipe["id"], {
+                    "source": "TheCocktailDB recipe snapshot",
+                    "reason": "No documented Chinese origin or Chinese spirit in the source record; a translated Chinese display name is not origin evidence.",
+                }),
                 "profile": profile,
                 "recipeSignals": signals,
-                "rationale": assignment_rationale(profile, signals),
+                "rationale": assignment_rationale(profile, signals, origin_group),
             },
         })
 
@@ -230,7 +249,12 @@ def main() -> None:
             "quoteCount": len(QUOTES),
             "contentPolicy": "Only documented, source-linked public-domain verse is used. No line is invented for the menu.",
             "translationPolicy": "Chinese and English translations are Cocktail Atlas editorial translations unless the quoted original is already in that language.",
-            "assignmentPolicy": "Quotes may be reused when multiple recipes share a flavour profile; authenticity and fit take priority over artificial uniqueness.",
+            "assignmentPolicy": "Chinese-origin drinks use Chinese verse; all other drinks use non-Chinese verse. Origin is evidence-based and never inferred from a translated display name. Quotes may be reused when recipes share a flavour profile.",
+            "originAudit": {
+                "chinaRecipeCount": sum(recipe["id"] in CHINESE_RECIPE_EVIDENCE for recipe in recipes),
+                "internationalRecipeCount": sum(recipe["id"] not in CHINESE_RECIPE_EVIDENCE for recipe in recipes),
+                "chinaEvidence": CHINESE_RECIPE_EVIDENCE,
+            },
         },
         "quotes": QUOTES,
         "assignments": assignments,
