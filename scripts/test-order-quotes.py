@@ -20,6 +20,7 @@ assert len(recipes) == len(assignments) == 441
 assert recipe_ids == assignment_ids
 assert len(quote_ids) == len(quotes) == payload["meta"]["quoteCount"]
 assert "No line is invented" in payload["meta"]["contentPolicy"]
+assert "Chinese-origin drinks use Chinese verse" in payload["meta"]["assignmentPolicy"]
 
 for quote in quotes:
     assert quote["original"].strip()
@@ -43,6 +44,13 @@ for assignment in assignments:
     basis = assignment["basis"]
     assert basis["type"] == "verified-public-domain-style-match"
     assert basis["profile"] in quote_item["profiles"]
+    assert basis["originGroup"] in {"china", "international"}
+    assert basis["originEvidence"]["source"].strip()
+    assert basis["originEvidence"]["reason"].strip()
+    if basis["originGroup"] == "china":
+        assert quote_item["language"].startswith("zh"), (assignment["id"], quote_item["id"])
+    else:
+        assert not quote_item["language"].startswith("zh"), (assignment["id"], quote_item["id"])
     assert basis["recipeSignals"]
     assert all(basis["rationale"][key].strip() for key in ("zhHans", "zhHant", "en"))
     recipe = recipes_by_id[assignment["id"]]
@@ -62,8 +70,11 @@ for assignment in assignments:
 
 languages = Counter(quote["language"] for quote in quotes)
 assert all(languages[language] for language in ("zh-Hant", "en", "fr", "es", "it", "pt"))
+origin_counts = Counter(assignment["basis"]["originGroup"] for assignment in assignments)
+assert origin_counts["china"] == payload["meta"]["originAudit"]["chinaRecipeCount"]
+assert origin_counts["international"] == payload["meta"]["originAudit"]["internationalRecipeCount"]
 
 traditional = json.loads((ROOT / "data" / "zh-hant.json").read_text())
 assert set(traditional["recipes"]) == recipe_ids
 
-print(f"QUOTE CHECK PASSED · {len(quotes)} verified public-domain excerpts · {len(assignments)} recipe matches · {len(languages)} source languages")
+print(f"QUOTE CHECK PASSED · {len(quotes)} verified public-domain excerpts · {origin_counts['china']} Chinese / {origin_counts['international']} international drink matches · {len(languages)} source languages")
