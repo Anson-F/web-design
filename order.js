@@ -1,5 +1,5 @@
 const DATA_URL = "data/recipes.json";
-const POETRY_URL = "data/order-poetry.json";
+const QUOTES_URL = "data/order-quotes.json";
 const ORDER_KEY = "cocktail-atlas-order-v1";
 const ORDER_NOTE_KEY = "cocktail-atlas-order-note-v1";
 const PAGE_SIZE = 32;
@@ -8,7 +8,7 @@ const pick = (zh, en) => L.pick(zh, en);
 
 const state = {
   recipes: [],
-  poetry: new Map(),
+  quotes: new Map(),
   visible: [],
   cart: new Map(),
   query: "",
@@ -24,6 +24,9 @@ const els = {
   menu: document.querySelector("#order-menu-list"),
   emptyResults: document.querySelector("#order-empty-results"),
   loadMore: document.querySelector("#order-load-more"),
+  carouselCount: document.querySelector("#order-carousel-count"),
+  carouselPrev: document.querySelector("#order-carousel-prev"),
+  carouselNext: document.querySelector("#order-carousel-next"),
   selected: document.querySelector("#selected-drinks"),
   emptyTicket: document.querySelector("#empty-ticket"),
   form: document.querySelector("#order-form"),
@@ -83,17 +86,30 @@ function ingredientSummary(recipe) {
   return `${names.join(" · ")}${recipe.ingredients.length > 5 ? " · …" : ""}`;
 }
 
-function poetryHtml(recipe) {
-  const poem = state.poetry.get(recipe.id);
-  if (!poem) return "";
-  const foreign = !poem.language.startsWith("zh");
-  const localizedLine = L.current === "zh-Hant" ? poem.translation.zhHant : L.current === "zh-Hans" ? poem.translation.zhHans : poem.translation.en;
-  const chineseTranslation = L.current === "zh-Hant" ? poem.translation.zhHant : poem.translation.zhHans;
-  const original = foreign ? poem.original : localizedLine;
+function localizedField(field) {
+  if (L.current === "zh-Hant") return field.zhHant;
+  if (L.current === "zh-Hans") return field.zhHans;
+  return field.en;
+}
+
+function quoteHtml(recipe) {
+  const entry = state.quotes.get(recipe.id);
+  if (!entry) return "";
+  const { quote, basis } = entry;
+  const chineseOriginal = quote.language.startsWith("zh");
+  const original = chineseOriginal ? (L.current === "zh-Hant" ? quote.translation.zhHant : quote.translation.zhHans) : quote.original;
+  const translation = chineseOriginal
+    ? (L.current === "en" ? quote.translation.en : "")
+    : (L.current === "zh-Hant" ? quote.translation.zhHant : quote.translation.zhHans);
+  const translationLang = chineseOriginal ? "en" : (L.current === "zh-Hant" ? "zh-Hant" : "zh-CN");
+  const author = localizedField(quote.attribution.author);
+  const work = localizedField(quote.attribution.work);
+  const rationale = localizedField(basis.rationale);
   return `
-    <figure class="drink-poem${foreign ? " is-foreign" : ""}" data-poem-id="${recipe.id}" title="${escapeHtml(L.current === "zh-Hant" ? poem.basis.zhHant : L.current === "zh-Hans" ? poem.basis.zhHans : poem.basis.en)}">
-      <p class="poem-original" lang="${foreign ? poem.language : L.languageTag}">${escapeHtml(original)}</p>
-      ${foreign ? `<p class="poem-translation" lang="${L.current === "zh-Hant" ? "zh-Hant" : "zh-CN"}" data-label="${L.current === "zh-Hant" ? "譯 · " : "译 · "}">${escapeHtml(chineseTranslation)}</p>` : ""}
+    <figure class="drink-poem${chineseOriginal ? " is-chinese" : " is-foreign"}" data-quote-id="${quote.id}" data-poem-id="${recipe.id}" title="${escapeHtml(rationale)}">
+      <blockquote class="poem-original" lang="${chineseOriginal ? L.languageTag : quote.language}">${escapeHtml(original).replaceAll(" / ", "<br>")}</blockquote>
+      ${translation ? `<p class="poem-translation" lang="${translationLang}" data-label="${L.current === "zh-Hant" ? "譯 · " : "译 · "}">${escapeHtml(translation)}</p>` : ""}
+      <figcaption><span>${escapeHtml(author)} · <cite>${escapeHtml(work)}</cite></span><a href="${escapeHtml(quote.attribution.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(`${L.t("order.quoteSource")}: ${author}, ${work}`)}">${L.t("order.quoteSource")} ↗</a></figcaption>
     </figure>`;
 }
 
@@ -133,14 +149,14 @@ function menuItem(recipe) {
   const quantity = state.cart.get(recipe.id) || 0;
   const flag = recipe.iba ? `IBA · ${recipe.iba}` : recipe.category;
   return `
-    <article class="order-menu-item">
+    <article class="order-menu-item" data-recipe-id="${recipe.id}">
       <div class="order-menu-item-inner">
         <span class="order-menu-poster">${posterImage(recipe)}</span>
         <div class="order-menu-copy">
           <span>${escapeHtml(localLabel(baseLabels, recipe.base))} · ${escapeHtml(localLabel(methodLabels, recipe.method))} · ${escapeHtml(flag)}</span>
           <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
-          ${poetryHtml(recipe)}
-          <p>${escapeHtml(ingredientSummary(recipe))}</p>
+          ${quoteHtml(recipe)}
+          <p class="order-card-ingredients">${escapeHtml(ingredientSummary(recipe))}</p>
         </div>
         <button class="add-drink${quantity ? " has-quantity" : ""}" type="button" data-add-id="${recipe.id}" aria-label="${escapeHtml(pick(`加入一杯 ${displayName(recipe)}`, `Add one ${recipe.name}`))}">
           ${quantity ? `${pick("再加一杯", "Add another")}<span>${pick(`已选 ${quantity}`, `${quantity} selected`)}</span>` : pick("加入", "Add")}
@@ -160,6 +176,39 @@ function renderMenu() {
   const remaining = state.visible.length - shown.length;
   els.loadMore.hidden = remaining <= 0;
   els.loadMore.querySelector("b").textContent = `${Math.min(PAGE_SIZE, remaining)} ${pick("款", "")}`.trim();
+  requestAnimationFrame(() => {
+    els.menu.scrollLeft = 0;
+    updateCarouselControls();
+  });
+}
+
+function carouselItems() {
+  return [...els.menu.querySelectorAll(".order-menu-item")];
+}
+
+function currentCarouselIndex() {
+  const items = carouselItems();
+  if (!items.length) return 0;
+  const left = els.menu.getBoundingClientRect().left;
+  return items.reduce((best, item, index) => {
+    const distance = Math.abs(item.getBoundingClientRect().left - left);
+    return distance < best.distance ? { index, distance } : best;
+  }, { index: 0, distance: Infinity }).index;
+}
+
+function updateCarouselControls() {
+  const items = carouselItems();
+  const index = currentCarouselIndex();
+  els.carouselCount.textContent = items.length ? `${String(index + 1).padStart(2, "0")} / ${String(items.length).padStart(2, "0")}` : "00 / 00";
+  els.carouselPrev.disabled = !items.length || index === 0;
+  els.carouselNext.disabled = !items.length || index === items.length - 1;
+}
+
+function moveCarousel(direction) {
+  const items = carouselItems();
+  if (!items.length) return;
+  const target = items[Math.max(0, Math.min(items.length - 1, currentCarouselIndex() + direction))];
+  target.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
 }
 
 function selectedItem(recipe, quantity) {
@@ -335,6 +384,19 @@ function bindEvents() {
     if (remove) { state.cart.delete(remove.dataset.removeId); renderTicket(); }
   });
   els.loadMore.addEventListener("click", () => { state.limit += PAGE_SIZE; renderMenu(); });
+  els.carouselPrev.addEventListener("click", () => moveCarousel(-1));
+  els.carouselNext.addEventListener("click", () => moveCarousel(1));
+  els.menu.addEventListener("scroll", () => requestAnimationFrame(updateCarouselControls), { passive: true });
+  els.menu.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    moveCarousel(event.key === "ArrowRight" ? 1 : -1);
+  });
+  els.menu.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    event.preventDefault();
+    els.menu.scrollBy({ left: event.deltaY, behavior: "auto" });
+  }, { passive: false });
   document.querySelector("#reset-order-search").addEventListener("click", resetFilters);
   els.note.addEventListener("input", () => {
     updateNoteCount();
@@ -366,10 +428,11 @@ function bindEvents() {
 
 async function loadData() {
   try {
-    const [recipeResponse, poetryResponse] = await Promise.all([fetch(DATA_URL), fetch(POETRY_URL)]);
-    if (!recipeResponse.ok || !poetryResponse.ok) throw new Error(`HTTP ${recipeResponse.status}/${poetryResponse.status}`);
-    const [payload, poetryPayload] = await Promise.all([recipeResponse.json(), poetryResponse.json()]);
-    state.poetry = new Map(poetryPayload.poems.map((poem) => [poem.id, poem]));
+    const [recipeResponse, quoteResponse] = await Promise.all([fetch(DATA_URL), fetch(QUOTES_URL)]);
+    if (!recipeResponse.ok || !quoteResponse.ok) throw new Error(`HTTP ${recipeResponse.status}/${quoteResponse.status}`);
+    const [payload, quotePayload] = await Promise.all([recipeResponse.json(), quoteResponse.json()]);
+    const quoteLibrary = new Map(quotePayload.quotes.map((quote) => [quote.id, quote]));
+    state.quotes = new Map(quotePayload.assignments.map((assignment) => [assignment.id, { quote: quoteLibrary.get(assignment.quoteId), basis: assignment.basis }]));
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
       search: normalizeSearch([recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.iba || "", ...recipe.ingredients.map((item) => item.name)].join(" ")),
