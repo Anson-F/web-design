@@ -42,6 +42,7 @@ with sync_playwright() as playwright:
             card = page.locator(f'.recipe-card:has(.recipe-open[data-id="{recipe_id}"])')
             expect(card).to_be_visible()
             poster = card.locator(".recipe-poster")
+            copy = card.locator(".recipe-card-copy")
             title = card.locator(".recipe-poster-title")
             formula = card.locator(".recipe-formula")
             rows = card.locator(".recipe-formula-row")
@@ -49,10 +50,13 @@ with sync_playwright() as playwright:
 
             card_box = card.bounding_box()
             poster_box = poster.bounding_box()
+            copy_box = copy.bounding_box()
             title_box = title.bounding_box()
             formula_box = formula.bounding_box()
-            assert card_box and poster_box and title_box and formula_box
-            assert_inside(title_box, poster_box)
+            assert card_box and poster_box and copy_box and title_box and formula_box
+            assert_inside(title_box, copy_box)
+            assert title_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, title_box)
+            assert card.locator(".recipe-poster > .recipe-poster-title").count() == 0
             assert_inside(formula_box, card_box)
             assert formula_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, formula_box)
             if viewport_name == "desktop":
@@ -77,12 +81,17 @@ with sync_playwright() as playwright:
             failures = page.evaluate(
                 """() => [...document.querySelectorAll('.recipe-card')].flatMap((card) => {
                     const poster = card.querySelector('.recipe-poster').getBoundingClientRect();
+                    const copy = card.querySelector('.recipe-card-copy').getBoundingClientRect();
                     const title = card.querySelector('.recipe-poster-title').getBoundingClientRect();
                     const formula = card.querySelector('.recipe-formula').getBoundingClientRect();
-                    const inside = title.left >= poster.left - 1 && title.top >= poster.top - 1
-                      && title.right <= poster.right + 1 && title.bottom <= poster.bottom + 1;
+                    const outside = title.left > poster.right;
+                    const insideCopy = title.left >= copy.left - 1 && title.top >= copy.top - 1
+                      && title.right <= copy.right + 1 && title.bottom <= copy.bottom + 1;
+                    const posterIsClear = !card.querySelector('.recipe-poster > .recipe-poster-title');
                     const beside = formula.left > poster.right;
-                    return inside && beside ? [] : [{ id: card.querySelector('.recipe-open').dataset.id, inside, beside }];
+                    return outside && insideCopy && posterIsClear && beside
+                      ? []
+                      : [{ id: card.querySelector('.recipe-open').dataset.id, outside, insideCopy, posterIsClear, beside }];
                 })"""
             )
             assert not failures, failures
@@ -91,5 +100,5 @@ with sync_playwright() as playwright:
 
     browser.close()
     assert not errors, errors
-    print("PASS: all 441 compact desktop spreads use a three-column grid; mobile reference and edge cases stay inside their cards")
+    print("PASS: all 441 compact desktop spreads keep titles outside posters in a three-column grid; mobile reference and edge cases stay inside their cards")
     print(f"Screenshots: {SCREENSHOT_DIR}")

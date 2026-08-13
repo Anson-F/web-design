@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-recipe-grid-1";
+const BUILD_VERSION = "20260813-title-outside-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const QUOTES_URL = `data/order-quotes.json?v=${BUILD_VERSION}`;
 const ORDER_KEY = "cocktail-atlas-order-v1";

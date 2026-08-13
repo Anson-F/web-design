@@ -33,7 +33,8 @@ with sync_playwright() as playwright:
     first_card = page.locator(".recipe-card").first
     expect(first_card.locator(".recipe-poster-title .localized-name")).not_to_be_empty()
     expect(first_card.locator(".recipe-formula-row")).not_to_have_count(0)
-    assert first_card.locator(".recipe-card-copy > h3").count() == 0
+    assert first_card.locator(".recipe-card-copy > .recipe-poster-title").count() == 1
+    assert first_card.locator(".recipe-poster > .recipe-poster-title").count() == 0
     first_card.screenshot(path=str(SCREENSHOT_DIR / "recipe-spread-mobile.png"))
     assert_no_horizontal_overflow(page)
 
@@ -76,8 +77,10 @@ with sync_playwright() as playwright:
     expect(first_card.locator(".recipe-formula-row")).not_to_have_count(0)
     box = first_card.bounding_box()
     poster_box = first_card.locator(".recipe-poster").bounding_box()
+    title_box = first_card.locator(".recipe-poster-title").bounding_box()
     formula_box = first_card.locator(".recipe-formula").bounding_box()
-    assert box and poster_box and formula_box
+    assert box and poster_box and title_box and formula_box
+    assert title_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, title_box)
     assert formula_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, formula_box)
     assert 300 <= box["height"] <= 390, box
     first_row = [page.locator(".recipe-card").nth(index).bounding_box() for index in range(3)]

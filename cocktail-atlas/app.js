@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-recipe-grid-1";
+const BUILD_VERSION = "20260813-title-outside-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
@@ -128,10 +128,10 @@ function renderCard(recipe, index) {
       <button class="recipe-open" type="button" data-id="${recipe.id}" aria-label="${escapeHtml(pick(`查看 ${displayName(recipe)} 配方`, `View ${recipe.name} recipe`))}">
         <span class="recipe-poster">
           ${posterImage(recipe)}
-          <h3 class="recipe-poster-title ${titleLengthClass(recipe)}">${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
         </span>
         <span class="recipe-card-copy">
           <span class="recipe-topline"><span>${String(index + 1).padStart(3, "0")} · ${escapeHtml(localLabel("bases", recipe.base))}</span>${iba}</span>
+          <h3 class="recipe-poster-title ${titleLengthClass(recipe)}">${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
           ${recipeFormulaHtml(recipe)}
           <span class="recipe-meta"><p>${escapeHtml(localLabel("methods", recipe.method))} · ${escapeHtml(localLabel("glasses", recipe.glass))}</p><span class="recipe-arrow" aria-hidden="true">↗</span></span>
         </span>
