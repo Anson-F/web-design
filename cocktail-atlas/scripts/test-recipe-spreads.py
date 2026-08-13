@@ -54,11 +54,11 @@ with sync_playwright() as playwright:
             assert card_box and poster_box and title_box and formula_box
             assert_inside(title_box, poster_box)
             assert_inside(formula_box, card_box)
+            assert formula_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, formula_box)
             if viewport_name == "desktop":
-                assert formula_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, formula_box)
-                assert rows.count() == page.locator(f'.recipe-card:has(.recipe-open[data-id="{recipe_id}"]) .recipe-formula-row').count()
+                assert 300 <= card_box["height"] <= 390, card_box
             else:
-                assert formula_box["y"] > poster_box["y"] + poster_box["height"], (poster_box, formula_box)
+                assert 250 <= card_box["height"] <= 330, card_box
 
             card.screenshot(path=str(SCREENSHOT_DIR / f"{viewport_name}-{slug}.png"))
 
@@ -69,6 +69,11 @@ with sync_playwright() as playwright:
             while load_more.is_visible():
                 load_more.click()
             expect(page.locator(".recipe-card")).to_have_count(441)
+            first_row = [page.locator(".recipe-card").nth(index).bounding_box() for index in range(3)]
+            fourth = page.locator(".recipe-card").nth(3).bounding_box()
+            assert all(item for item in first_row) and fourth
+            assert max(item["y"] for item in first_row) - min(item["y"] for item in first_row) < 2
+            assert fourth["y"] > first_row[0]["y"] + first_row[0]["height"] - 2
             failures = page.evaluate(
                 """() => [...document.querySelectorAll('.recipe-card')].flatMap((card) => {
                     const poster = card.querySelector('.recipe-poster').getBoundingClientRect();
@@ -86,5 +91,5 @@ with sync_playwright() as playwright:
 
     browser.close()
     assert not errors, errors
-    print("PASS: all 441 desktop spreads plus mobile reference, longest-title, and 11-ingredient cases stay inside their cards")
+    print("PASS: all 441 compact desktop spreads use a three-column grid; mobile reference and edge cases stay inside their cards")
     print(f"Screenshots: {SCREENSHOT_DIR}")

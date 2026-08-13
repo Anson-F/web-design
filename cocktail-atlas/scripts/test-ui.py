@@ -79,7 +79,12 @@ with sync_playwright() as playwright:
     formula_box = first_card.locator(".recipe-formula").bounding_box()
     assert box and poster_box and formula_box
     assert formula_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, formula_box)
-    assert box["height"] >= 520, box
+    assert 300 <= box["height"] <= 390, box
+    first_row = [page.locator(".recipe-card").nth(index).bounding_box() for index in range(3)]
+    fourth = page.locator(".recipe-card").nth(3).bounding_box()
+    assert all(item for item in first_row) and fourth
+    assert max(item["y"] for item in first_row) - min(item["y"] for item in first_row) < 2
+    assert fourth["y"] > first_row[0]["y"] + first_row[0]["height"] - 2
     first_card.screenshot(path=str(SCREENSHOT_DIR / "recipe-spread-desktop.png"))
     assert_no_horizontal_overflow(page)
     page.screenshot(path=str(SCREENSHOT_DIR / "desktop.png"), full_page=True)
