@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-recipe-spread-1";
+const BUILD_VERSION = "20260813-recipe-grid-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
