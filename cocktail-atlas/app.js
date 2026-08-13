@@ -1,4 +1,4 @@
-const BUILD_VERSION = "20260813-zh-tw-1";
+const BUILD_VERSION = "20260813-recipe-spread-1";
 const DATA_URL = `data/recipes.json?v=${BUILD_VERSION}`;
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
@@ -100,9 +100,25 @@ function formatDate(value) {
   return new Intl.DateTimeFormat(L.isChinese ? L.languageTag : "en-US", { year: "numeric", month: "short", day: "2-digit" }).format(new Date(value));
 }
 
-function ingredientSummary(recipe) {
-  const names = recipe.ingredients.slice(0, 4).map((item) => L.isChinese ? L.zh(T.ingredient(item.name)) : item.name);
-  return `${names.join(" · ")}${recipe.ingredients.length > 4 ? " · …" : ""}`;
+function recipeFormulaHtml(recipe) {
+  const ingredients = recipe.ingredients.map((item) => {
+    const name = L.isChinese ? L.zh(T.ingredient(item.name)) : item.name;
+    const measure = L.isChinese ? L.zh(T.measure(item.measure || "适量")) : (item.measure || "To taste");
+    return `<span class="recipe-formula-row"><span>${escapeHtml(name)}</span><small>${escapeHtml(measure)}</small></span>`;
+  }).join("");
+  return `
+    <span class="recipe-formula">
+      <span class="recipe-formula-label">${pick("配方 / FORMULA", "Formula")}</span>
+      <span class="recipe-formula-list">${ingredients}</span>
+      ${recipe.ingredients.length > 4 ? `<span class="recipe-formula-more">＋ ${recipe.ingredients.length - 4} ${pick("项材料", "more")}</span>` : ""}
+    </span>`;
+}
+
+function titleLengthClass(recipe) {
+  const length = Array.from(displayName(recipe)).length;
+  if (length > 16) return "is-title-long";
+  if (length > 9) return "is-title-medium";
+  return "";
 }
 
 function renderCard(recipe, index) {
@@ -110,11 +126,14 @@ function renderCard(recipe, index) {
   return `
     <article class="recipe-card">
       <button class="recipe-open" type="button" data-id="${recipe.id}" aria-label="${escapeHtml(pick(`查看 ${displayName(recipe)} 配方`, `View ${recipe.name} recipe`))}">
-        <span class="recipe-poster">${posterImage(recipe)}</span>
+        <span class="recipe-poster">
+          ${posterImage(recipe)}
+          <h3 class="recipe-poster-title ${titleLengthClass(recipe)}">${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
+        </span>
         <span class="recipe-card-copy">
           <span class="recipe-topline"><span>${String(index + 1).padStart(3, "0")} · ${escapeHtml(localLabel("bases", recipe.base))}</span>${iba}</span>
-          <h3>${nameHtml(recipe)}${recipe.alcoholic === "Non alcoholic" ? " <i>0%</i>" : ""}</h3>
-          <span class="recipe-meta"><p>${escapeHtml(ingredientSummary(recipe))}</p><span class="recipe-arrow" aria-hidden="true">↗</span></span>
+          ${recipeFormulaHtml(recipe)}
+          <span class="recipe-meta"><p>${escapeHtml(localLabel("methods", recipe.method))} · ${escapeHtml(localLabel("glasses", recipe.glass))}</p><span class="recipe-arrow" aria-hidden="true">↗</span></span>
         </span>
       </button>
     </article>`;

@@ -30,6 +30,11 @@ with sync_playwright() as playwright:
     expect(page.get_by_role("heading", name="把吧台， 折进一页索引。")).to_be_visible()
     expect(page.locator("#results-status")).to_contain_text("找到 441 款配方")
     expect(page.locator(".recipe-card")).to_have_count(30)
+    first_card = page.locator(".recipe-card").first
+    expect(first_card.locator(".recipe-poster-title .localized-name")).not_to_be_empty()
+    expect(first_card.locator(".recipe-formula-row")).not_to_have_count(0)
+    assert first_card.locator(".recipe-card-copy > h3").count() == 0
+    first_card.screenshot(path=str(SCREENSHOT_DIR / "recipe-spread-mobile.png"))
     assert_no_horizontal_overflow(page)
 
     page.get_by_role("button", name="IBA 经典").click()
@@ -66,6 +71,16 @@ with sync_playwright() as playwright:
     page.goto(BASE_URL, wait_until="networkidle")
     expect(page.locator("#results-status")).to_contain_text("找到 441 款配方")
     expect(page.locator(".recipe-card")).to_have_count(30)
+    first_card = page.locator(".recipe-card").first
+    expect(first_card.locator(".recipe-poster-title .localized-name")).not_to_be_empty()
+    expect(first_card.locator(".recipe-formula-row")).not_to_have_count(0)
+    box = first_card.bounding_box()
+    poster_box = first_card.locator(".recipe-poster").bounding_box()
+    formula_box = first_card.locator(".recipe-formula").bounding_box()
+    assert box and poster_box and formula_box
+    assert formula_box["x"] > poster_box["x"] + poster_box["width"], (poster_box, formula_box)
+    assert box["height"] >= 520, box
+    first_card.screenshot(path=str(SCREENSHOT_DIR / "recipe-spread-desktop.png"))
     assert_no_horizontal_overflow(page)
     page.screenshot(path=str(SCREENSHOT_DIR / "desktop.png"), full_page=True)
     desktop.close()
