@@ -1,10 +1,12 @@
 # 酒谱 · Cocktail Atlas
 
-一个可直接发布在 GitHub Pages 的静态鸡尾酒配方档案。界面支持中文和英文，可按酒名、原料、基酒、IBA 标记与调制技法检索。
+一个可直接发布在 GitHub Pages 的静态鸡尾酒配方档案。界面支持简体中文、繁體中文和英文，可按酒名、原料、基酒、IBA 标记与调制技法检索。
 
-网站支持中文与英文切换，并在浏览器中记忆语言偏好。中文模式将中文酒名作为主标题、英文原名作为小号副标题；英文模式仅显示英文酒名。`data/name-zh.json` 保存中文酒名映射，同步配方时会自动合并。
+网站支持简体中文、繁體中文与英文切换，并在浏览器中记忆语言偏好。中文模式将中文酒名作为主标题、英文原名作为小号副标题；英文模式仅显示英文酒名。`data/name-zh.json` 保存中文酒名映射，同步配方时会自动合并；`data/zh-hant.json` 保存 441 款酒名与步骤的繁体版本。
 
 `order.html` 提供不含金额和付款环节的纯点单界面：选择酒款、调整数量、填写可选备注并生成可复制的点单纸。当前选择保存在浏览器本机。
+
+点单酒单中的每款酒都有一条独立原创短句，位置在酒名与原料之间。短句依据对应配方的基酒、原料、调制方式或杯型提炼，依据记录在 `data/order-poetry.json`；外语原句会在下一行显示中文翻译。当前 441 条短句全部唯一，包含 14 条西班牙语、意大利语、法语或葡萄牙语原句，不转载第三方诗作或歌词。
 
 每一款配方都有一张独立的 3:5 竖版海报，保存在 `assets/posters/`。海报使用 `gc-minimal-zine-poster-v0-1` 的 Standard Mode 生成：大面积旧纸留白、微型代表性酒体、稀疏排版与单一高彩度点色。生成前会根据原始配方核对杯型、酒体颜色、冰型、泡沫与装饰；原型照片只作造型证据，不会复制或随站点重新发布。
 
@@ -55,4 +57,12 @@ python3 cocktail-atlas/scripts/test-posters.py
 python3 cocktail-atlas/scripts/test-ui.py
 python3 cocktail-atlas/scripts/test-localization.py
 python3 cocktail-atlas/scripts/test-order.py
+python3 cocktail-atlas/scripts/test-order-poetry.py
+```
+
+配方快照更新后，可重新生成诗句与繁体资产：
+
+```sh
+python3 cocktail-atlas/scripts/generate-order-poetry.py
+python3 cocktail-atlas/scripts/build-traditional-localization.py
 ```

@@ -583,11 +583,12 @@ footer a { min-height: 44px; display: flex; align-items: center; justify-self: s
 }
 
 @media (max-width: 560px) {
+  .site-header .brand > span:last-child { display: none; }
   .site-header nav a,
   .theme-toggle { padding-inline: 7px; }
   .site-header nav { gap: 0; }
   .theme-label { display: none; }
-  .language-switch button { min-width: 34px; padding-inline: 5px; }
+  .language-switch button { min-width: 30px; padding-inline: 4px; }
 }
 
 @media (min-width: 1100px) {

@@ -36,6 +36,11 @@ with sync_playwright() as playwright:
     assert_no_horizontal_overflow(page)
     page.screenshot(path=str(SCREENSHOT_DIR / "recipes-zh.png"), full_page=True)
 
+    page.locator('[data-lang="zh-Hant"]').click()
+    expect(page.locator("html")).to_have_attribute("lang", "zh-Hant")
+    expect(page.locator("#hero-title")).to_contain_text("吧臺")
+    expect(mojito_card.locator(".localized-name")).to_have_text("莫吉託")
+
     page.locator('[data-lang="en"]').click()
     expect(page.locator("html")).to_have_attribute("lang", "en")
     expect(page.locator("#hero-title")).to_contain_text("The whole bar")
@@ -61,6 +66,8 @@ with sync_playwright() as playwright:
     page.wait_for_timeout(250)
     order_mojito = page.locator('.order-menu-item:has([data-add-id="11000"])')
     expect(order_mojito.locator(".original-name")).to_have_count(0)
+    expect(order_mojito.locator(".poem-original")).to_have_attribute("lang", "es")
+    expect(order_mojito.locator(".poem-translation")).to_have_text("青柠触到冰时，薄荷便醒来。")
     order_mojito.locator("[data-add-id]").click()
     expect(page.locator(".selected-drink .localized-name")).to_have_text("Mojito")
     expect(page.locator(".selected-drink .original-name")).to_have_count(0)
@@ -70,7 +77,12 @@ with sync_playwright() as playwright:
     expect(page.locator(".confirmation-list .original-name")).to_have_count(0)
     page.get_by_role("button", name="Close confirmation").click()
 
-    page.locator('[data-lang="zh"]').click()
+    page.locator('[data-lang="zh-Hant"]').click()
+    expect(page.locator("html")).to_have_attribute("lang", "zh-Hant")
+    expect(page.locator("#order-title")).to_contain_text("今晚")
+    expect(page.locator(".selected-drink .localized-name")).to_have_text("莫吉託")
+
+    page.locator('[data-lang="zh-Hans"]').click()
     expect(page.locator("html")).to_have_attribute("lang", "zh-CN")
     expect(page.locator("#order-title")).to_contain_text("今晚")
     expect(page.locator(".selected-drink .localized-name")).to_have_text("莫吉托")
@@ -81,5 +93,5 @@ with sync_playwright() as playwright:
     context.close()
     browser.close()
     assert not errors, errors
-    print("PASS: Chinese primary + English subtitle, English-only names, translated UI, persisted locale, bilingual order flow, and mobile overflow")
+    print("PASS: Simplified + Traditional Chinese, English-only names, persisted locale, localized order flow, and mobile overflow")
     print(f"Screenshots: {SCREENSHOT_DIR}")

@@ -1,7 +1,7 @@
 const DATA_URL = "data/recipes.json";
 const PAGE_SIZE = 30;
 const L = window.CocktailLocale;
-const pick = (zh, en) => (L.current === "zh" ? zh : en);
+const pick = (zh, en) => L.pick(zh, en);
 
 const state = {
   recipes: [],
@@ -55,19 +55,19 @@ const labels = {
 
 function localLabel(group, key) {
   const value = labels[group][key];
-  if (Array.isArray(value)) return value[L.current === "zh" ? 0 : 1];
-  if (group === "glasses") return L.current === "zh" ? (value || key) : key;
-  if (group === "categories") return L.current === "zh" ? (value || key) : key;
+  if (Array.isArray(value)) return L.isChinese ? L.zh(value[0]) : value[1];
+  if (group === "glasses") return L.isChinese ? L.zh(value || key) : key;
+  if (group === "categories") return L.isChinese ? L.zh(value || key) : key;
   return key;
 }
 
 function nameHtml(recipe) {
   if (L.current === "en") return `<span class="localized-name" lang="en">${escapeHtml(recipe.name)}</span>`;
-  return `<span class="localized-name" lang="zh-CN">${escapeHtml(recipe.nameZh || recipe.name)}</span><small class="original-name" lang="en">${escapeHtml(recipe.name)}</small>`;
+  return `<span class="localized-name" lang="${L.languageTag}">${escapeHtml(L.zh(recipe.nameZh || recipe.name))}</span><small class="original-name" lang="en">${escapeHtml(recipe.name)}</small>`;
 }
 
 function displayName(recipe) {
-  return L.current === "zh" ? (recipe.nameZh || recipe.name) : recipe.name;
+  return L.isChinese ? L.zh(recipe.nameZh || recipe.name) : recipe.name;
 }
 
 function posterAlt(recipe) {
@@ -88,7 +88,7 @@ function normalizeSearch(value) {
 
 function formatDate(value) {
   if (!value) return pick("未知", "Unknown");
-  return new Intl.DateTimeFormat(L.current === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "short", day: "2-digit" }).format(new Date(value));
+  return new Intl.DateTimeFormat(L.isChinese ? L.languageTag : "en-US", { year: "numeric", month: "short", day: "2-digit" }).format(new Date(value));
 }
 
 function ingredientSummary(recipe) {
@@ -124,11 +124,11 @@ function filterRecipes() {
   });
 
   if (state.sort === "iba") {
-    results.sort((a, b) => Number(Boolean(b.iba)) - Number(Boolean(a.iba)) || displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
+    results.sort((a, b) => Number(Boolean(b.iba)) - Number(Boolean(a.iba)) || displayName(a).localeCompare(displayName(b), L.languageTag));
   } else if (state.sort === "newest") {
-    results.sort((a, b) => String(b.modified).localeCompare(String(a.modified)) || displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
+    results.sort((a, b) => String(b.modified).localeCompare(String(a.modified)) || displayName(a).localeCompare(displayName(b), L.languageTag));
   } else {
-    results.sort((a, b) => displayName(a).localeCompare(displayName(b), L.current === "zh" ? "zh-CN" : "en"));
+    results.sort((a, b) => displayName(a).localeCompare(displayName(b), L.languageTag));
   }
   state.visible = results;
 }
@@ -138,8 +138,8 @@ function render() {
   const shown = state.visible.slice(0, state.limit);
   els.grid.innerHTML = shown.map(renderCard).join("");
   els.empty.hidden = state.visible.length !== 0;
-  els.status.textContent = L.current === "zh"
-    ? `找到 ${state.visible.length} 款配方${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`
+  els.status.textContent = L.isChinese
+    ? L.zh(`找到 ${state.visible.length} 款配方${shown.length < state.visible.length ? ` · 已展开 ${shown.length} 款` : ""}`)
     : `${state.visible.length} recipes found${shown.length < state.visible.length ? ` · showing ${shown.length}` : ""}`;
 
   const remaining = state.visible.length - shown.length;
@@ -155,8 +155,8 @@ function recipeSourceUrl(recipe) {
 
 function copyText(recipe) {
   const ingredients = recipe.ingredients.map((item) => `- ${item.measure || pick("适量", "To taste")} ${item.name}`.trim()).join("\n");
-  const instruction = L.current === "zh" ? (recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
-  const heading = L.current === "zh" ? `${recipe.nameZh || recipe.name} / ${recipe.name}` : recipe.name;
+  const instruction = L.isChinese ? L.zh(recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
+  const heading = L.isChinese ? `${displayName(recipe)} / ${recipe.name}` : recipe.name;
   return `${heading}\n${localLabel("methods", recipe.method)} · ${localLabel("glasses", recipe.glass)}\n\n${pick("材料", "Ingredients")}\n${ingredients}\n\n${pick("方法", "Method")}\n${instruction}\n\n${pick("来源", "Source")}：TheCocktailDB · ${recipeSourceUrl(recipe)}`;
 }
 
@@ -164,7 +164,7 @@ function openRecipe(id) {
   const recipe = state.recipes.find((item) => item.id === id);
   if (!recipe) return;
   state.activeRecipeId = id;
-  const instruction = L.current === "zh" ? (recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
+  const instruction = L.isChinese ? L.zh(recipe.instructions.zh || recipe.instructions.en) : recipe.instructions.en;
   const translated = L.current === "en" || Boolean(recipe.instructions.zh);
   const tags = [
     localLabel("bases", recipe.base),
@@ -194,7 +194,7 @@ function openRecipe(id) {
         <section aria-labelledby="method-${recipe.id}">
           <h3 id="method-${recipe.id}">${pick("方法", "Method")} / ${escapeHtml(localLabel("methods", recipe.method))}</h3>
           <p class="instruction">${escapeHtml(instruction)}</p>
-          ${translated ? "" : '<p class="translation-note">此条暂无中文步骤，保留来源英文。</p>'}
+          ${translated ? "" : `<p class="translation-note">${pick("此条暂无中文步骤，保留来源英文。", "")}</p>`}
         </section>
       </div>
       <div class="dialog-actions">
@@ -300,12 +300,12 @@ async function loadData() {
     state.recipes = payload.recipes.map((recipe) => ({
       ...recipe,
       search: normalizeSearch([
-        recipe.name, recipe.nameZh || "", recipe.category, recipe.glass, recipe.iba || "",
+        recipe.name, recipe.nameZh || "", L.toTraditional(recipe.nameZh || ""), recipe.category, recipe.glass, recipe.iba || "",
         recipe.instructions.zh || "", recipe.instructions.en || "",
         ...recipe.ingredients.map((item) => item.name),
       ].join(" ")),
     }));
-    const numberLocale = L.current === "zh" ? "zh-CN" : "en-US";
+    const numberLocale = L.isChinese ? L.languageTag : "en-US";
     document.querySelector('[data-stat="recipes"]').textContent = payload.meta.recipeCount.toLocaleString(numberLocale);
     document.querySelector('[data-stat="ingredients"]').textContent = payload.meta.ingredientCount.toLocaleString(numberLocale);
     document.querySelector('[data-stat="iba"]').textContent = payload.meta.ibaCount.toLocaleString(numberLocale);

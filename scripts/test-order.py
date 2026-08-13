@@ -50,6 +50,7 @@ with sync_playwright() as playwright:
     expect(page.get_by_role("heading", name="今晚， 想喝哪一杯？")).to_be_visible()
     expect(page.locator("#order-results-status")).to_contain_text("酒单共 441 款")
     expect(page.locator(".order-menu-item")).to_have_count(32)
+    expect(page.locator(".drink-poem")).to_have_count(32)
     expect(page.get_by_role("button", name="确认点单")).to_be_disabled()
     assert_no_horizontal_overflow(page)
     assert_no_visible_amounts(page)
@@ -57,6 +58,8 @@ with sync_playwright() as playwright:
     page.locator("#order-search").fill("Mojito")
     page.wait_for_timeout(250)
     expect(page.locator(".order-menu-item").first).to_be_visible()
+    expect(page.locator('[data-poem-id="11000"] .poem-original')).to_have_attribute("lang", "es")
+    expect(page.locator('[data-poem-id="11000"] .poem-translation')).to_have_text("青柠触到冰时，薄荷便醒来。")
     first_add = page.locator("[data-add-id]").first
     first_add.click()
     first_add.click()
